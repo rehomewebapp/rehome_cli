@@ -3,6 +3,7 @@ import random     # used to draw a random event
 import glob       # used to find available parameter files
 import shutil     # used to create copies of the default parameter files
 import subprocess # used to run the nano texteditor to edit config files from the cmd prompt
+from pathlib import Path
 
 # these modules have to be installed (e.g. with pip)
 import pandas as pd
@@ -38,11 +39,11 @@ for cnt, user_path in enumerate(existing_users):
 selection = int(input(f'Selected Character: '))
 user_path = existing_users[selection]
 # if the user wants to create a new character ...
-if user_path == 'data/users/NewUser.yaml':
+if Path(user_path) == Path('data/users/NewUser.yaml'):
     user_name = input("Give your new character a name: ")
-    new_user_path = f'data/users/{user_name}.yaml'
+    new_user_path = Path(f'data/users/{user_name}.yaml')
     # create a copy of the default user
-    shutil.copy('data/users/NewUser.yaml', new_user_path)
+    shutil.copy(Path('data/users/NewUser.yaml'), new_user_path)
     # write user name to user config file
     with open(new_user_path, "r") as stream:
         try:
@@ -77,11 +78,11 @@ for cnt, building_path in enumerate(existing_buildings):
 selection = int(input(f'Selected Building: '))
 building_path = existing_buildings[selection]
 # if the user wants to create a new building ...
-if building_path == 'data/buildings/NewBuilding.yaml':
+if Path(building_path) == Path('data/buildings/NewBuilding.yaml'):
     building_name = input("Give your new building a name: ")
-    new_building_path = f'data/buildings/{building_name}.yaml'
+    new_building_path = Path(f'data/buildings/{building_name}.yaml')
     # create a copy of the default building
-    shutil.copy('data/buildings/NewBuilding.yaml', new_building_path)
+    shutil.copy(Path('data/buildings/NewBuilding.yaml'), new_building_path)
     # let the user edit the default building config file
     subprocess.call(['nano', new_building_path])
     building_path = new_building_path
@@ -94,7 +95,7 @@ my_building = building.Building(building_path, verbose = False)
 
 
 # choose system configuration
-system_path = 'data/systems/NewSystem.yaml'
+system_path = Path('data/systems/NewSystem.yaml')
 my_system = system.System(system_path)
 
 # start REhoming...
