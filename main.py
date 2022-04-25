@@ -1,0 +1,144 @@
+# modules from pythons std library
+import random     # used to draw a random event
+import glob       # used to find available parameter files
+import shutil     # used to create copies of the default parameter files
+import subprocess # used to run the nano texteditor to edit config files from the cmd prompt
+
+# these modules have to be installed (e.g. with pip)
+import pandas as pd
+from ruamel.yaml import YAML # this version of pyyaml support dumping without loosing the comments in the .yaml file
+yaml = YAML()
+
+# modules you find in this directory
+import utilities
+import user
+import building
+import system
+import actions
+import events
+import simulate
+
+# intro
+print("Welcome to REhome!")
+print("Try to reach the climate goals without going bankrupt or violating your comfort zone!")
+
+# choose scenario
+print("Choose the cost and emission scenario:")
+my_scenario = pd.read_csv("data/scenarios/Scenario.csv", index_col = "year")
+print("Using the default scenario for moderate increase of CO2 pricing ...")
+#print(my_scenario.head())
+
+# choose user
+print("Choose your character:")
+existing_users = glob.glob('data/users/*.yaml')
+for cnt, user_path in enumerate(existing_users):
+    user_filename = utilities.path_leaf(user_path) # we only need the filename, not the filepath
+    user_name = user_filename.split(sep='.')[0] # get rid of the extension
+    print(f'    - {user_name} ({cnt})')
+selection = int(input(f'Selected Character: '))
+user_path = existing_users[selection]
+# if the user wants to create a new character ...
+if user_path == 'data/users/NewUser.yaml':
+    user_name = input("Give your new character a name: ")
+    new_user_path = f'data/users/{user_name}.yaml'
+    # create a copy of the default user
+    shutil.copy('data/users/NewUser.yaml', new_user_path)
+    # write user name to user config file
+    with open(new_user_path, "r") as stream:
+        try:
+            user_file = yaml.load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+    user_file['name'] = user_name
+    with open(new_user_path, 'w') as f:
+        yaml.dump(user_file, f)
+    # let the user edit it's config file
+    subprocess.call(['nano', new_user_path])
+    user_path = new_user_path
+else:
+    #print(f"Loading user from {user_path}")
+    pass
+
+# create the user from the selected config file path
+me = user.User(user_path)
+
+print(f"Hello {me.name} :).", end = ' ')
+
+
+# Let's choose a building config in a simmilar manner
+print('Please choose one of the following buildings:')
+existing_buildings = glob.glob('data/buildings/*.yaml')
+# print all available options
+for cnt, building_path in enumerate(existing_buildings):
+    # only print the filename, not the path
+    building_filename = utilities.path_leaf(building_path)
+    building_name = building_filename.split(sep='.')[0]
+    print(f'   - {building_name} ({cnt})')
+selection = int(input(f'Selected Building: '))
+building_path = existing_buildings[selection]
+# if the user wants to create a new building ...
+if building_path == 'data/buildings/NewBuilding.yaml':
+    building_name = input("Give your new building a name: ")
+    new_building_path = f'data/buildings/{building_name}.yaml'
+    # create a copy of the default building
+    shutil.copy('data/buildings/NewBuilding.yaml', new_building_path)
+    # let the user edit the default building config file
+    subprocess.call(['nano', new_building_path])
+    building_path = new_building_path
+else:
+    #print(f"Loading parameters from {building_path}")
+    pass
+
+# create a instance of your building
+my_building = building.Building(building_path, verbose = False)
+
+
+# choose system configuration
+system_path = 'data/systems/NewSystem.yaml'
+my_system = system.System(system_path)
+
+# start REhoming...
+event_states = {} # initalize event states, to store event information for durations longer than one year
+
+year = 2022 # start year
+while year <= 2045: # end year
+    what2do = '0'
+    while what2do != '':
+        what2do = input('Enter to Simulate next year; Renovate the building (1); Improve the System (2); Change User Behaviour (3): \n')
+        if what2do == '1':
+            my_building = actions.renovate(building_path)
+        elif what2do == '2':
+            print("Let's improve the System Performance!")
+            my_system = actions.optimize(system_path)
+        elif what2do == '3':
+            print("Let's change the user behaviour!")
+            me = actions.adopt(user_path)
+
+    # check if we have to reset one of the events
+    if event_states != {}:
+        #print(event_states)
+        for key, value in list(event_states.items()): # list enforces a copy of dict - required to avoid removing changing size of dict while iterating over it
+            getattr(events, key)(year, me, my_building, event_states)
+
+    # draw random event
+    event = random.choice(events.events)
+    #print(f'Event: {event}')
+    # call the random event and pass user, building (system) objects (so they can be changed by the event).
+    getattr(events, event)(year, me, my_building, event_states)
+
+    # simulate
+    print(f'Year: {year}/45')
+    comfort_deviation = simulate.calculate(year, me, my_building, my_system, my_scenario)
+
+    print(f'CO2 Budget: {me.co2_budget:.2f} t, Bank Deposit: {me.bank_deposit:.2f} Euro, Comfort: {comfort_deviation}\n')
+    year = year + 1
+
+    # game over
+    if me.co2_budget < 0:
+        print('CO2 budget exceeded!')
+        print('GAME OVER =(')
+        break
+    elif me.bank_deposit < 0:
+        print('Bank account empty!')
+        print('GAME OVER =(')
+        break

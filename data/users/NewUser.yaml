@@ -1,0 +1,8 @@
+name                  : 'me' # [string] character name
+bank_deposit          : 1000 # [euros]
+monthly_sallary       : 2000 # [euros]
+monthly_loan_payoff   : 500  # [euros] bank credit for the building
+monthly_living_cost   : 500  # [euros] groceries
+monthly_entertainment : 400  # [euros] internet, holidays, ... 
+annual_el_demand      : 1500 # [kWh] household electricity demand for lighting and appliances
+comfort_temperature   : 21   # [degC]
