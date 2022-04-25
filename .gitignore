@@ -1,1 +1,6 @@
 __pycache__/*
+*.json
+*.yaml
+!NewBuilding.yaml
+!NewUser.yaml
+!NewSystem.yaml
