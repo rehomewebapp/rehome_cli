@@ -13,7 +13,7 @@ class Building:
     def __init__(self, building_path, verbose = False):
         ''' Initialize the building, read all parameters from the given '''
 
-        # load user parameters from file
+        # load building parameters from file
         with open(building_path, "r") as stream:
             try:
                 building_params = yaml.safe_load(stream)
@@ -32,9 +32,6 @@ class Building:
 
         # load location dependend weather data
         self.weather = self.load_weather()
-
-
-        print("Let's move in...")
 
     def load_weather(self):
         # If there is no weather data for the given location in the input directory download it
@@ -66,11 +63,10 @@ class Building:
     def calc(self, comfort_temp):
         '''calculate the annual heat demand of the building
         '''
-        avg_annual_amb_temperature = 11 #[degC]
-        dT = comfort_temp - self.weather['T_amb [degC]'] #avg_annual_amb_temperature # [degC] - !ToDo this should be a timeseries, avg. annual temperature for now
+        dT = comfort_temp - self.weather['T_amb [degC]'] # temperature difference between ambient air and comfort temperature
 
         ventilation_losses  = self.ventilation_rate * self.volume * C.DENSITY_AIR * dT # [W]
         transmission_losses = self.u_value * self.opaque_area * dT # [W]
         #solar_gains = 0 # [W] !ToDo iterate over windows and sum up solar heat gains
-        heatdemand = ventilation_losses + transmission_losses #- solar_gains # [W]
+        heatdemand = ventilation_losses + transmission_losses # - solar_gains # [W]
         return heatdemand
