@@ -8,12 +8,15 @@ class System:
                 components = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
                 print(exc)
-
+        
+        # Add component instances as attributes
         for component, params in components.items():
             constructor =  globals()[component] # create reference to component class
             setattr(self, component, constructor(params)) # add component instance as attribute to the systems
 
     def calc(self, heat_demand, el_demand, weather):
+        ''' Calculate heat and electricity balances
+        '''
         # heat balance
         used_gas = self.GasBoiler.calc(heat_demand)
 
