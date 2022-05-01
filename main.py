@@ -26,7 +26,7 @@ print("Try to reach the climate goals without going bankrupt or violating your c
 # choose scenario
 print("Choose the cost and emission scenario:")
 my_scenario = pd.read_csv("data/scenarios/Scenario.csv", index_col = "year")
-print("Using the default scenario for moderate increase of CO2 pricing ...")
+print("    - Default scenario (moderate increase of CO2 pricing) ")
 #print(my_scenario.head())
 
 # choose user
