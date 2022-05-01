@@ -101,6 +101,7 @@ my_system = system.System(system_path)
 # start REhoming...
 event_states = {} # initalize event states, to store event information for durations longer than one year
 
+win = True
 year = 2022 # start year
 while year <= 2045: # end year
     what2do = '0'
@@ -137,9 +138,14 @@ while year <= 2045: # end year
     # game over
     if me.co2_budget < 0:
         print('CO2 budget exceeded!')
-        print('GAME OVER =(')
+        win = False
         break
     elif me.bank_deposit < 0:
-        print('Bank account empty!')
-        print('GAME OVER =(')
+        print('Bank account empty!', end = ' ')
+        win = False
         break
+
+if win == True:
+    print('Yaayy!! You made it. ')
+else:
+    print('GAME OVER =(')
