@@ -12,7 +12,7 @@ def renovate(building_path):
     #      (e.g no geometry changed..., physical parameters within bounds ...)
     # !ToDo calculate the costs for the renovation
     new_building = building.Building(building_path)
-    print('Renovation done! - Please not that the expenses of your renovation are not yet considered. Everything for free :)')
+    print('Renovation done! - Please note that the expenses of your renovation are not yet considered. Everything for free :)')
     return new_building
 
 def optimize(system_path):
