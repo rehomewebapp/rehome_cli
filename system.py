@@ -1,4 +1,5 @@
 import yaml
+from pvlib import irradiance
 
 class System:
     def __init__(self, system_path):
@@ -48,6 +49,54 @@ class Photovoltaic(Component):
         Component.__init__(self, params)
 
     def calc(self, weather):
-        power = 0.1 * weather['G(h) [W/m^2]']
+        ''' calculate PV power
+        Parameters
+        ----------
+        weather : pandas_df
+            weather['G(h) [W/m^2]']  : global horizontal irradiance [W/m^2]
+            weather['Gb(n) [W/m^2]'] : beam normal irradiance on PV module [W/m^2]
+            weather['Gd(h) [W/m^2]'] : diffuse horizontal irradiance on PV module [W/m^2]
+            weather['T_amb [degC]']  : ambient temperature [degC]
+        
+        Returns
+        -------
+        float
+            power produced by the PV modules [W]
+        '''
 
+        # calculate irradiance on tilted plane
+        irradiance_df = irradiance.get_total_irradiance(surface_tilt = self.tilt_angle,
+                                                        surface_azimuth = self.azimuth_angle,
+                                                        solar_zenith = weather['solar_zenith [deg]'],
+                                                        solar_azimuth = weather['solar_azimuth [deg]'],
+                                                        dni = weather['Gb(n) [W/m^2]'],
+                                                        ghi = weather['G(h) [W/m^2]'],
+                                                        dhi = weather['Gd(h) [W/m^2]'])
+        #print(irradiance_df.head())
+
+        irradiance_tilted = irradiance_df['poa_global']
+        temp_amb = weather['T_amb [degC]']
+
+        #constant parameters
+        a0 = 0.8249     #constant eff. parameter
+        a1 = 0.0007     #linear eff. parameter
+        a2 = -1E-6      #quadratic eff. parameter
+        a3 = 4E-10      #cubic eff. parameter
+        u_pv = 12.0     #PV voltage [V]
+        c_th_pv = 0.5   #thermal capacity of PV module [kJ/kgK]
+        area_spec = 6.5 #specific area of PV module [m²/kW]
+        irrad_norm = 1.0#standard irradiance [kW/m²]
+        temp_stc = 25   #standard test condition temperature [°C]
+        
+        if self.power_nom != 0:
+            eta = a0 + a1*irradiance_tilted + a2* irradiance_tilted.pow(2) + a3* irradiance_tilted.pow(3) # efficiency curve
+            area_total = area_spec * self.power_nom # total area [m²]
+            eta_nom = self.power_nom / (irrad_norm * area_total) # nominal efficiency [-]
+            eta = eta * self.efficiency_param * eta_nom # efficiency
+            temp_pv = temp_amb + c_th_pv * irradiance_tilted / u_pv # temperature of PV module [degC]
+            power_pv_opt = eta * irradiance_tilted / 1000 * area_total # PV power without temperature losses [kW]
+            power = power_pv_opt * (1 - self.neg_temp_coeff/100 * (temp_pv - temp_stc)) * 1000 # PV power [W]
+        else:
+            power = 0
+        
         return power
