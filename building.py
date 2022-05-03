@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 
 import yaml
+from pvlib import solarposition
 
 import utilities
 import constants as C
@@ -55,6 +56,11 @@ class Building:
         }
 
         df_weather.rename(columns=column_names, inplace=True)
+
+        #calculate solar position with weather index and add to weather_df
+        solar_position = solarposition.get_solarposition(df_weather.index, latitude, longitude)
+        df_weather['solar_zenith [deg]'], df_weather['solar_azimuth [deg]'] = solar_position['zenith'], solar_position['azimuth']
+
         df_weather.reset_index(inplace = True)
         # print(df_weather.head())
         return df_weather
