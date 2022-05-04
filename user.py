@@ -18,7 +18,7 @@ class User:
             setattr(self, key, value)
 
         self.profile = self.generate_profiles()
-        self.bank_deposit = self.inital_bank_deposit
+        self.bank_deposit = self.initial_bank_deposit
 
     def generate_profiles(self):
         # read hourly factors of normalized profile
