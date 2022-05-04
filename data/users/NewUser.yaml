@@ -1,5 +1,5 @@
 name                  : 'me' # [string] character name
-bank_deposit          : 1000 # [euros]
+initial_bank_deposit  : 1000 # [euros]
 monthly_sallary       : 2000 # [euros]
 monthly_loan_payoff   : 500  # [euros] bank credit for the building
 monthly_living_cost   : 500  # [euros] groceries

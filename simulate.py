@@ -41,10 +41,10 @@ def calculate(year, user, building, system, scenario, annual_results):
 
     # balance
     balance = revenues - expenses - energy_costs
-    user.bank_deposit = user.bank_deposit + balance # [euro]
+    bank_deposit = annual_results['Bank Deposit [Euro]'].at[last_year] + balance # [euro]
     print(f"Bank balance: {balance:.2f} euro/a")
 
     # COMFORT
     comfort_deviation = '=)'    # comfort deviation [-]
 
-    return CO2_budget, comfort_deviation
+    return CO2_budget, bank_deposit, comfort_deviation
