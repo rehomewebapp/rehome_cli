@@ -4,8 +4,10 @@ import glob       # used to find available parameter files
 import shutil     # used to create copies of the default parameter files
 import subprocess # used to run the nano texteditor to edit config files from the cmd prompt
 from pathlib import Path
+from unittest import result
 
 # these modules have to be installed (e.g. with pip)
+import numpy as np
 import pandas as pd
 from ruamel.yaml import YAML # this version of pyyaml support dumping without loosing the comments in the .yaml file
 yaml = YAML()
@@ -18,6 +20,7 @@ import system
 import actions
 import events
 import simulate
+import scenario
 
 # intro
 print("Welcome to REhome!")
@@ -25,9 +28,13 @@ print("Try to reach the climate goals without going bankrupt or violating your c
 
 # choose scenario
 print("Choose the cost and emission scenario:")
-my_scenario = pd.read_csv("data/scenarios/Scenario.csv", index_col = "year")
+my_scenario = scenario.Scenario("data/eco2_paths/Scenario.csv")
 print("    - Default scenario (moderate increase of CO2 pricing) ")
-#print(my_scenario.head())
+#print(my_scenario.eco2_path.head())
+
+# initalize results dataframe
+initial_year = 2021
+annual_results = pd.DataFrame(index = [my_scenario.eco2_path.index])
 
 # choose user
 print("Choose your character:")
@@ -62,6 +69,11 @@ else:
 
 # create the user from the selected config file path
 me = user.User(user_path)
+
+# initalize user columns in results df
+annual_results[['CO2 Budget [t]','Bank Deposit [Euro]', 'Comfort [=)]']] = np.nan
+annual_results.at[initial_year, 'CO2 Budget [t]'] = my_scenario.CO2_budget
+annual_results.at[initial_year, 'Bank Deposit [Euro]'] = me.bank_deposit
 
 print(f"Hello {me.name} :).", end = ' ')
 
@@ -98,11 +110,14 @@ my_building = building.Building(building_path, verbose = False)
 system_path = Path('data/systems/NewSystem.yaml')
 my_system = system.System(system_path)
 
+
+annual_results.to_csv('annual_results.csv')
+
 # start REhoming...
 event_states = {} # initalize event states, to store event information for durations longer than one year
 
 win = True
-year = 2022 # start year
+year = initial_year+1 # start year
 while year <= 2045: # end year
     what2do = '0'
     while what2do != '':
@@ -130,13 +145,22 @@ while year <= 2045: # end year
 
     # simulate
     print(f'Year: {year}/45')
-    comfort_deviation = simulate.calculate(year, me, my_building, my_system, my_scenario)
+    CO2_budget, comfort_deviation = simulate.calculate(year, me, my_building, my_system, my_scenario, annual_results)
 
-    print(f'CO2 Budget: {me.co2_budget:.2f} t, Bank Deposit: {me.bank_deposit:.2f} Euro, Comfort: {comfort_deviation}\n')
+    # write annual results to df and csv-file
+    annual_results.at[year, 'CO2 Budget [t]'] = CO2_budget
+    annual_results.at[year, 'Bank Deposit [Euro]'] = me.bank_deposit
+    annual_results.at[year, 'Comfort [=)]'] = comfort_deviation
+    annual_results.to_csv('annual_results.csv')
+
+    # print user output
+    print(annual_results.loc[year])
+    # print(f'CO2 Budget: {me.co2_budget:.2f} t, Bank Deposit: {me.bank_deposit:.2f} Euro, Comfort: {comfort_deviation}\n')
+
     year = year + 1
 
     # game over
-    if me.co2_budget < 0:
+    if CO2_budget < 0:
         print('CO2 budget exceeded!')
         win = False
         break

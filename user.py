@@ -17,8 +17,6 @@ class User:
                 print(f"    - {key}, {value}")
             setattr(self, key, value)
 
-        self.co2_budget    = 50 # [tons] !ToDo move this to a file called scenarios.py
-
         self.profile = self.generate_profiles()
 
     def generate_profiles(self):

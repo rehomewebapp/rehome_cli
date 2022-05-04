@@ -1,5 +1,6 @@
 
-def calculate(year, user, building, system, scenario):
+def calculate(year, user, building, system, scenario, annual_results):
+    last_year = year - 1
     # ECOLOGY
     # gas consumption
     hourly_heat_demand = building.calc(user.comfort_temperature) # Wh
@@ -16,8 +17,8 @@ def calculate(year, user, building, system, scenario):
     print(f"Electricity grid supply: {annual_el_supply/1000:.2f} kWh/a")
 
     # CO2 emissions
-    spec_co2_gas = scenario['spec_CO2_gas [g/kWh]'].at[year]
-    spec_co2_el = scenario['spec_CO2_el [g/kWh]'].at[year]
+    spec_co2_gas = scenario.eco2_path['spec_CO2_gas [g/kWh]'].at[year]
+    spec_co2_el = scenario.eco2_path['spec_CO2_el [g/kWh]'].at[year]
 
     #print(spec_co2_gas)
     co2_gas     = annual_used_gas/1000 * spec_co2_gas / 1e6   # [tons]
@@ -26,7 +27,7 @@ def calculate(year, user, building, system, scenario):
     co2_emissions = co2_gas + co2_el # total co2 emissions [tons]
 
     # balance
-    user.co2_budget = user.co2_budget - co2_emissions
+    CO2_budget = annual_results['CO2 Budget [t]'].at[last_year] - co2_emissions
     print(f"CO2 emissions: {co2_emissions:.2f} t/a", end = ", ")
 
     # ECONOMY
@@ -34,8 +35,8 @@ def calculate(year, user, building, system, scenario):
     revenues, expenses = user.calc() # [euro]
 
     # energy costs
-    cost_gas = annual_used_gas/1000 * scenario['cost_gas [ct/kWh]'].at[year]/100 # [euro]
-    cost_el = annual_el_supply/1000 * scenario['cost_el_hh [ct/kWh]'].at[year]/100 # [euro]
+    cost_gas = annual_used_gas/1000 * scenario.eco2_path['cost_gas [ct/kWh]'].at[year]/100 # [euro]
+    cost_el = annual_el_supply/1000 * scenario.eco2_path['cost_el_hh [ct/kWh]'].at[year]/100 # [euro]
     energy_costs   = cost_gas + cost_el # total energy costs [euro]
 
     # balance
@@ -46,4 +47,4 @@ def calculate(year, user, building, system, scenario):
     # COMFORT
     comfort_deviation = '=)'    # comfort deviation [-]
 
-    return comfort_deviation
+    return CO2_budget, comfort_deviation
