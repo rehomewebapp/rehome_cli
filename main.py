@@ -28,7 +28,7 @@ print("Try to reach the climate goals without going bankrupt or violating your c
 
 # choose scenario
 print("Choose the cost and emission scenario:")
-my_scenario = scenario.Scenario("data/eco2_paths/Scenario.csv")
+my_scenario = scenario.Eco2("data/eco2_paths/Scenario.csv")
 print("    - Default scenario (moderate increase of CO2 pricing) ")
 #print(my_scenario.eco2_path.head())
 
