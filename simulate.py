@@ -1,10 +1,14 @@
 
 def calculate(year, user, building, system, scenario, annual_results):
     last_year = year - 1
+
+    # Building
+    annual_building_results, hourly_heat_demand = building.calc(user)
+    hourly_el_demand = user.profile['el_hh [W]']    # Wh
+
     # ECOLOGY
     # gas consumption
-    hourly_heat_demand = building.calc(user.comfort_temperature) # Wh
-    hourly_el_demand = user.profile['el_hh [W]']    # Wh 
+
     annual_el_hh  = hourly_el_demand.sum()    # Wh 
     
     hourly_used_gas, hourly_el_feedin, hourly_el_supply = system.calc(hourly_heat_demand, hourly_el_demand, building.weather) # Wh
@@ -12,7 +16,7 @@ def calculate(year, user, building, system, scenario, annual_results):
     annual_el_feedin = hourly_el_feedin.sum()
     annual_el_supply = hourly_el_supply.sum()
 
-    print(f"Annual heat demand: {hourly_heat_demand.sum()/1000:.2f} kWh/a", end = ", ")
+    print(f"Annual heat demand: {annual_building_results['RH']/1000:.2f} kWh/a", end = ", ")
     print(f"Electricity PV feed-in: {annual_el_feedin/1000:.2f} kWh/a", end = ", ")
     print(f"Electricity grid supply: {annual_el_supply/1000:.2f} kWh/a")
 
@@ -47,4 +51,19 @@ def calculate(year, user, building, system, scenario, annual_results):
     # COMFORT
     comfort_deviation = '=)'    # comfort deviation [-]
 
-    return CO2_budget, bank_deposit, comfort_deviation
+    return  CO2_budget, bank_deposit, comfort_deviation
+
+# {'Building':annual_building_results, 'System':0, 'Eco2': 0 } 
+
+
+''' !toDo simplify simulate .. outsource calculations, so that we only have to call a few functions
+
+def simulate(init, user, building, system, scenario):
+    
+    annual_building_results, hourly_heatdemand = building.calc(user) # Series/reihe ['RH', 'TRANS_TOTAL', 'VENT', 'TRANS_ROOF', 'TRANS_WINDOW', 'SOLAR_GAINS', 'INTERAL_GAINS_APP',...]
+    annual_system_results, annual_grid_interactions = system.calc(hourly_heatdemand, user) #Series/reihe ['GasBoiler': ['GasConsumption', 'FullLoadHours', 'Q_th'..], 'PV': ['Autarky', 'ElectricityProduction', 'Feedin', ], 'HeatPump': ['Q_th', 'E_el', 'FullLoadHours', 'El_from_PV', 'El_from_Storage', 'COP'] ]
+    eco2_results = eco2.calc(annual_grid_interactions)
+    results = [annual_building_results, annual_system_results, eco2_results]
+
+    return results   
+'''

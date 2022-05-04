@@ -66,13 +66,13 @@ class Building:
         return df_weather
 
 
-    def calc(self, comfort_temp):
+    def calc(self, user):
         '''calculate the annual heat demand of the building
         '''
-        dT = comfort_temp - self.weather['T_amb [degC]'] # temperature difference between ambient air and comfort temperature
+        dT = user.comfort_temperature - self.weather['T_amb [degC]'] # temperature difference between ambient air and comfort temperature
 
         ventilation_losses  = self.ventilation_rate * self.volume * C.DENSITY_AIR * dT # [W]
         transmission_losses = self.u_value * self.opaque_area * dT # [W]
         #solar_gains = 0 # [W] !ToDo iterate over windows and sum up solar heat gains
         heatdemand = ventilation_losses + transmission_losses # - solar_gains # [W]
-        return heatdemand
+        return {'RH': heatdemand.sum(), 'TransTotal':transmission_losses.sum(), 'Vent':ventilation_losses.sum()}, heatdemand
