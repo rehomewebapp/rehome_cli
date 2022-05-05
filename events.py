@@ -2,8 +2,7 @@ import random
 # These events can happen randomly during the obersvation period.
 
 # add new event (the function name) to this list to register it.
-events = ['nothing', 'inherit', 'nothing', 'sarscov', 'nothing', 'saharaSand', 'nothing', 'unemployed'] 
-
+events = ['nothing', 'inherit', 'nothing', 'sarscov', 'nothing', 'saharaSand', 'nothing', 'unemployed', 'nothing', 'promotion'] 
 
 
 def nothing(year, user, building, system, event_states):
@@ -62,3 +61,12 @@ def unemployed(year, user, building, system, event_states):
     user.monthly_sallary = user.monthly_sallary * 0.5
     event_states['unemployed'] = year + random.randint(1,2)
     
+
+def promotion(year, user, building, system, event_states):
+    # this event increases the sallary
+
+    # check if user is not unemployed in the simulated year
+    if 'unemployed' not in event_states:
+        promotion_factor = 1 + random.randint(5,25)/100
+        print(f"Congratulations! You've been promoted. Your new monthly sallary increased from {user.monthly_sallary} euro to {user.monthly_sallary * promotion_factor} euro.")
+        user.monthly_sallary = user.monthly_sallary * promotion_factor
