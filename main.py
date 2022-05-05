@@ -164,7 +164,7 @@ while year <= 2045: # end year
         print('CO2 budget exceeded!')
         win = False
         break
-    elif me.bank_deposit < 0:
+    elif bank_deposit < 0:
         print('Bank account empty!', end = ' ')
         win = False
         break
