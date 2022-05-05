@@ -2,7 +2,8 @@ import random
 # These events can happen randomly during the obersvation period.
 
 # add new event (the function name) to this list to register it.
-events = ['nothing', 'inherit', 'nothing', 'sarscov', 'nothing', 'saharaSand', 'nothing', 'unemployed', 'nothing', 'promotion'] 
+events = ['nothing', 'inherit', 'nothing', 'sarscov', 'nothing', 'saharaSand', 'nothing', 'unemployed',
+          'nothing', 'promotion', 'nothing', 'fridge'] 
 
 
 def nothing(year, user, building, system, event_states):
@@ -70,3 +71,10 @@ def promotion(year, user, building, system, event_states):
         promotion_factor = 1 + random.randint(5,25)/100
         print(f"Congratulations! You've been promoted. Your new monthly sallary increased from {user.monthly_sallary} euro to {user.monthly_sallary * promotion_factor} euro.")
         user.monthly_sallary = user.monthly_sallary * promotion_factor
+
+def fridge(year, user, building, system, event_states):
+    # This event reduces the electricity demand and uniquely removes money from the bank account
+    cost = 500 # [euro] 
+    print(f"Your refrigerator is broken. It is replaced by an energy-efficient one. You pay {cost} euro and your annual electricity demand is reduced from {user.annual_el_demand} kWh to {user.annual_el_demand - 100} kWh.")
+    user.bank_deposit = user.bank_deposit - cost
+    user.annual_el_demand = user.annual_el_demand - cost
