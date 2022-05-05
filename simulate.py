@@ -17,7 +17,7 @@ def calculate(year, user, building, system, scenario, annual_results):
     annual_el_supply = hourly_el_supply.sum()
 
     print(f"Annual heat demand: {annual_building_results['RH']/1000:.2f} kWh/a", end = ", ")
-    print(f"Electricity PV feed-in: {annual_el_feedin/1000:.2f} kWh/a", end = ", ")
+    print(f"Electricity PV feed-in: {-annual_el_feedin/1000:.2f} kWh/a", end = ", ")
     print(f"Electricity grid supply: {annual_el_supply/1000:.2f} kWh/a")
 
     # CO2 emissions
