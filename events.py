@@ -3,7 +3,7 @@ import random
 
 # add new event (the function name) to this list to register it.
 events = ['nothing', 'inherit', 'nothing', 'sarscov', 'nothing', 'saharaSand', 'nothing', 'unemployed',
-          'nothing', 'promotion', 'nothing', 'fridge'] 
+          'nothing', 'promotion', 'nothing', 'fridge', 'nothing', 'gasBoilerAging'] 
 
 
 def nothing(year, user, building, system, event_states):
@@ -78,3 +78,18 @@ def fridge(year, user, building, system, event_states):
     print(f"Your refrigerator is broken. It is replaced by an energy-efficient one. You pay {cost} euro and your annual electricity demand is reduced from {user.annual_el_demand} kWh to {user.annual_el_demand - 100} kWh.")
     user.bank_deposit = user.bank_deposit - cost
     user.annual_el_demand = user.annual_el_demand - cost
+
+def gasBoilerAging(year, user, building, system, event_states):
+    # this event reduces the gas boiler efficiency for one year and creates cost after one year
+
+    # check if user is not unemployed in the simulated year
+    if 'gasBoilerAging' in event_states:
+        cost = 1000 # [euro]
+        system.GasBoiler.efficiency = system.GasBoiler.efficiency + 0.1
+        user.bank_deposit = user.bank_deposit - cost # [euro]
+        print(f"A mechanic repairs your gas boiler for {cost} euro. Resetting efficiency back to {system.GasBoiler.efficiency}.")
+        event_states.pop('gasBoilerAging', None) # remove event from event_states dictionary
+
+    print(f"Uh-oh! The efficiency of the gas boiler drops from {system.GasBoiler.efficiency} to {system.GasBoiler.efficiency-0.1:.2} due to aging effects.")
+    system.GasBoiler.efficiency = system.GasBoiler.efficiency - 0.1
+    event_states['gasBoilerAging'] = year + random.randint(1,2)
