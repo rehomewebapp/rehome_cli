@@ -22,7 +22,7 @@ def sarscov(year, user, building, system, event_states):
     if 'sarscov' in event_states:
         if year == event_states['sarscov']:
             building.ventilation_rate = building.ventilation_rate - 0.2
-            print(f"Yeey, the pandemic is over. Resetting ventilation rate back to {building.ventilation_rate} 1/h.")
+            print(f"Yeey, the pandemic is over. Resetting ventilation rate back to {building.ventilation_rate:.2} 1/h.")
             event_states.pop('sarscov', None) # remove event from event_states dictionary
 
         return
