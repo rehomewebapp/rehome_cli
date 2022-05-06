@@ -89,6 +89,7 @@ def gasBoilerAging(year, user, building, system, event_states):
         user.bank_deposit = user.bank_deposit - cost # [euro]
         print(f"A mechanic repairs your gas boiler for {cost} euro. Resetting efficiency back to {system.GasBoiler.efficiency}.")
         event_states.pop('gasBoilerAging', None) # remove event from event_states dictionary
+        return
 
     print(f"Uh-oh! The efficiency of the gas boiler drops from {system.GasBoiler.efficiency} to {system.GasBoiler.efficiency-0.1:.2} due to aging effects.")
     system.GasBoiler.efficiency = system.GasBoiler.efficiency - 0.1
