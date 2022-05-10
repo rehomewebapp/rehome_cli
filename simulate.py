@@ -16,7 +16,7 @@ def calculate(year, user, building, system, scenario, annual_results_last_year):
     annual_el_feedin = hourly_el_feedin.sum()
     annual_el_supply = hourly_el_supply.sum()
 
-    print(f"Annual heat demand: {annual_building_results['RH']/1000:.2f} kWh/a", end = ", ")
+    #print(f"Annual heat demand: {annual_building_results['RH']/1000:.2f} kWh/a", end = ", ")
     print(f"Electricity PV feed-in: {-annual_el_feedin/1000:.2f} kWh/a", end = ", ")
     print(f"Electricity grid supply: {annual_el_supply/1000:.2f} kWh/a")
 
@@ -31,7 +31,7 @@ def calculate(year, user, building, system, scenario, annual_results_last_year):
     co2_emissions = co2_gas + co2_el # total co2 emissions [tons]
 
     # balance
-    CO2_budget = annual_results_last_year['CO2 Budget [t]'].at[last_year] - co2_emissions
+    CO2_budget = annual_results_last_year['CO2 Budget [t]'] - co2_emissions
     print(f"CO2 emissions: {co2_emissions:.2f} t/a", end = ", ")
 
     # ECONOMY
@@ -45,13 +45,13 @@ def calculate(year, user, building, system, scenario, annual_results_last_year):
 
     # balance
     balance = revenues - expenses - energy_costs
-    bank_deposit = annual_results_last_year['Bank Deposit [Euro]'].at[last_year] + balance # [euro]
+    bank_deposit = annual_results_last_year['Bank Deposit [Euro]'] + balance # [euro]
     print(f"Bank balance: {balance:.2f} euro/a")
 
     # COMFORT
     comfort_deviation = '=)'    # comfort deviation [-]
     
-    return  CO2_budget, bank_deposit, comfort_deviation
+    return  CO2_budget, bank_deposit, comfort_deviation, annual_building_results
 
 # {'Building':annual_building_results, 'System':0, 'Eco2': 0 } 
 

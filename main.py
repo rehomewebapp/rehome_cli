@@ -34,7 +34,7 @@ print("    - Default scenario (moderate increase of CO2 pricing) ")
 
 # initalize results dataframe
 initial_year = 2021
-annual_results = pd.DataFrame(index = [my_scenario.eco2_path.index])
+annual_results = pd.DataFrame(index = my_scenario.eco2_path.index)
 
 # choose user
 print("Choose your character:")
@@ -145,8 +145,15 @@ while year <= 2045: # end year
 
     # simulate
     print(f'Year: {year}/45')
-    CO2_budget, bank_deposit, comfort_deviation = simulate.calculate(year, me, my_building, my_system, my_scenario, annual_results.loc[year-1])
-
+    CO2_budget, bank_deposit, comfort_deviation, annual_building_results = simulate.calculate(year, me, my_building, my_system, my_scenario, annual_results.loc[year-1])
+    
+    # append annual_building_results dict to annual_results df  
+    if year == initial_year:
+        annual_results = annual_results.join(pd.DataFrame([annual_building_results], index=[year]))
+    else:
+        for key, value in annual_building_results.items():
+            annual_results[key] = value 
+    
     # write annual results to df and csv-file
     annual_results.at[year, 'CO2 Budget [t]'] = CO2_budget
     annual_results.at[year, 'Bank Deposit [Euro]'] = bank_deposit
