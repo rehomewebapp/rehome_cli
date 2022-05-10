@@ -106,7 +106,7 @@ def balconyPV(year, user, building, system, event_states):
     # this event increases your installed PV power
     delta_power = 0.6
 
-    print(f"Happy Birthday! Your friends surprise you with a balcony power plant. Your installed PV power increases: {system.Photovoltaic.power_nom} kWp -> {system.Photovoltaic.power_nom + delta_efficiency:.2} kWp")
+    print(f"Happy Birthday! Your friends surprise you with a balcony power plant. Your installed PV power increases: {system.Photovoltaic.power_nom} kWp -> {system.Photovoltaic.power_nom + delta_power:.2} kWp")
     system.Photovoltaic.power_nom = system.Photovoltaic.power_nom + delta_power
 
 def coldYear(year, user, building, system, event_states):
