@@ -145,7 +145,7 @@ while year <= 2045: # end year
 
     # simulate
     print(f'Year: {year}/45')
-    CO2_budget, bank_deposit, comfort_deviation = simulate.calculate(year, me, my_building, my_system, my_scenario, annual_results)
+    CO2_budget, bank_deposit, comfort_deviation = simulate.calculate(year, me, my_building, my_system, my_scenario, annual_results.loc[year-1])
 
     # write annual results to df and csv-file
     annual_results.at[year, 'CO2 Budget [t]'] = CO2_budget

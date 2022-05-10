@@ -1,5 +1,5 @@
 
-def calculate(year, user, building, system, scenario, annual_results):
+def calculate(year, user, building, system, scenario, annual_results_last_year):
     last_year = year - 1
 
     # Building
@@ -31,7 +31,7 @@ def calculate(year, user, building, system, scenario, annual_results):
     co2_emissions = co2_gas + co2_el # total co2 emissions [tons]
 
     # balance
-    CO2_budget = annual_results['CO2 Budget [t]'].at[last_year] - co2_emissions
+    CO2_budget = annual_results_last_year['CO2 Budget [t]'].at[last_year] - co2_emissions
     print(f"CO2 emissions: {co2_emissions:.2f} t/a", end = ", ")
 
     # ECONOMY
@@ -45,12 +45,12 @@ def calculate(year, user, building, system, scenario, annual_results):
 
     # balance
     balance = revenues - expenses - energy_costs
-    bank_deposit = annual_results['Bank Deposit [Euro]'].at[last_year] + balance # [euro]
+    bank_deposit = annual_results_last_year['Bank Deposit [Euro]'].at[last_year] + balance # [euro]
     print(f"Bank balance: {balance:.2f} euro/a")
 
     # COMFORT
     comfort_deviation = '=)'    # comfort deviation [-]
-
+    
     return  CO2_budget, bank_deposit, comfort_deviation
 
 # {'Building':annual_building_results, 'System':0, 'Eco2': 0 } 
