@@ -90,7 +90,7 @@ def gasBoilerAging(year, user, building, system, event_states):
 
     # check if efficiency has to be reset
     if 'gasBoilerAging' in event_states:
-        if year == event_states['unemployed']:
+        if year == event_states['gasBoilerAging']:
             cost = 1000 # [euro]
             system.GasBoiler.efficiency = system.GasBoiler.efficiency + delta_efficiency
             user.bank_deposit = user.bank_deposit - cost # [euro]
