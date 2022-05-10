@@ -27,7 +27,7 @@ class System:
         el_feedin = balance.where(balance < 0, 0)
         el_supply = balance.where(balance > 0, 0)
 
-        return used_gas, el_feedin, el_supply
+        return {'Gas consumption [kwh/a]': used_gas.sum()/1000, 'Electricity PV feed-in [kWh/a]': el_feedin.sum()/1000, 'Electricity grid supply [kWh/a]': el_supply.sum()/1000}, used_gas, el_feedin, el_supply
 
 class Component:
     def __init__(self, params, verbose = False):

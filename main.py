@@ -145,13 +145,16 @@ while year <= 2045: # end year
 
     # simulate
     print(f'Year: {year}/45')
-    CO2_budget, bank_deposit, comfort_deviation, annual_building_results = simulate.calculate(year, me, my_building, my_system, my_scenario, annual_results.loc[year-1])
+    CO2_budget, bank_deposit, comfort_deviation, annual_building_results, annual_system_results = simulate.calculate(year, me, my_building, my_system, my_scenario, annual_results.loc[year-1])
     
     # append annual_building_results dict to annual_results df  
     if year == initial_year:
         annual_results = annual_results.join(pd.DataFrame([annual_building_results], index=[year]))
+        annual_results = annual_results.join(pd.DataFrame([annual_system_results], index=[year]))
     else:
         for key, value in annual_building_results.items():
+            annual_results[key] = value
+        for key, value in annual_system_results.items():
             annual_results[key] = value 
     
     # write annual results to df and csv-file

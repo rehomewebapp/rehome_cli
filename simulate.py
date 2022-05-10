@@ -1,6 +1,5 @@
 
 def calculate(year, user, building, system, scenario, annual_results_last_year):
-    last_year = year - 1
 
     # Building
     annual_building_results, hourly_heat_demand = building.calc(user)
@@ -11,22 +10,21 @@ def calculate(year, user, building, system, scenario, annual_results_last_year):
 
     annual_el_hh  = hourly_el_demand.sum()    # Wh 
     
-    hourly_used_gas, hourly_el_feedin, hourly_el_supply = system.calc(hourly_heat_demand, hourly_el_demand, building.weather) # Wh
-    annual_used_gas = hourly_used_gas.sum()
-    annual_el_feedin = hourly_el_feedin.sum()
-    annual_el_supply = hourly_el_supply.sum()
+    annual_system_results, hourly_used_gas, hourly_el_feedin, hourly_el_supply = system.calc(hourly_heat_demand, hourly_el_demand, building.weather) # Wh
+    #annual_used_gas = hourly_used_gas.sum()
+    #annual_el_feedin = hourly_el_feedin.sum()
+    #annual_el_supply = hourly_el_supply.sum()
 
-    #print(f"Annual heat demand: {annual_building_results['RH']/1000:.2f} kWh/a", end = ", ")
-    print(f"Electricity PV feed-in: {-annual_el_feedin/1000:.2f} kWh/a", end = ", ")
-    print(f"Electricity grid supply: {annual_el_supply/1000:.2f} kWh/a")
+    #print(f"Electricity PV feed-in: {-annual_el_feedin/1000:.2f} kWh/a", end = ", ")
+    #print(f"Electricity grid supply: {annual_el_supply/1000:.2f} kWh/a")
 
     # CO2 emissions
     spec_co2_gas = scenario.eco2_path['spec_CO2_gas [g/kWh]'].at[year]
     spec_co2_el = scenario.eco2_path['spec_CO2_el [g/kWh]'].at[year]
 
     #print(spec_co2_gas)
-    co2_gas     = annual_used_gas/1000 * spec_co2_gas / 1e6   # [tons]
-    co2_el      = annual_el_supply/1000 * spec_co2_el   / 1e6   # [tons]
+    co2_gas     = annual_system_results['Gas consumption [kwh/a]'] * spec_co2_gas / 1e6   # [tons]
+    co2_el      = annual_system_results['Electricity grid supply [kWh/a]'] * spec_co2_el   / 1e6   # [tons]
     #print(f'{co2_gas=} {co2_el=}')
     co2_emissions = co2_gas + co2_el # total co2 emissions [tons]
 
@@ -39,8 +37,8 @@ def calculate(year, user, building, system, scenario, annual_results_last_year):
     revenues, expenses = user.calc() # [euro]
 
     # energy costs
-    cost_gas = annual_used_gas/1000 * scenario.eco2_path['cost_gas [ct/kWh]'].at[year]/100 # [euro]
-    cost_el = annual_el_supply/1000 * scenario.eco2_path['cost_el_hh [ct/kWh]'].at[year]/100 # [euro]
+    cost_gas = annual_system_results['Gas consumption [kwh/a]'] * scenario.eco2_path['cost_gas [ct/kWh]'].at[year]/100 # [euro]
+    cost_el = annual_system_results['Electricity grid supply [kWh/a]'] * scenario.eco2_path['cost_el_hh [ct/kWh]'].at[year]/100 # [euro]
     energy_costs   = cost_gas + cost_el # total energy costs [euro]
 
     # balance
@@ -51,7 +49,7 @@ def calculate(year, user, building, system, scenario, annual_results_last_year):
     # COMFORT
     comfort_deviation = '=)'    # comfort deviation [-]
     
-    return  CO2_budget, bank_deposit, comfort_deviation, annual_building_results
+    return  CO2_budget, bank_deposit, comfort_deviation, annual_building_results, annual_system_results
 
 # {'Building':annual_building_results, 'System':0, 'Eco2': 0 } 
 
