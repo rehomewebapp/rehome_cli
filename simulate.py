@@ -10,13 +10,7 @@ def calculate(year, user, building, system, scenario, annual_results_last_year):
 
     annual_el_hh  = hourly_el_demand.sum()    # Wh 
     
-    annual_system_results, hourly_used_gas, hourly_el_feedin, hourly_el_supply = system.calc(hourly_heat_demand, hourly_el_demand, building.weather) # Wh
-    #annual_used_gas = hourly_used_gas.sum()
-    #annual_el_feedin = hourly_el_feedin.sum()
-    #annual_el_supply = hourly_el_supply.sum()
-
-    #print(f"Electricity PV feed-in: {-annual_el_feedin/1000:.2f} kWh/a", end = ", ")
-    #print(f"Electricity grid supply: {annual_el_supply/1000:.2f} kWh/a")
+    annual_system_results, hourly_used_gas, hourly_el_feedin, hourly_el_supply = system.calc(hourly_heat_demand, hourly_el_demand, building.weather) # kWh, Wh
 
     # CO2 emissions
     spec_co2_gas = scenario.eco2_path['spec_CO2_gas [g/kWh]'].at[year]
