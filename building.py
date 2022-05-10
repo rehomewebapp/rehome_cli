@@ -75,4 +75,4 @@ class Building:
         transmission_losses = self.u_value * self.opaque_area * dT # [W]
         #solar_gains = 0 # [W] !ToDo iterate over windows and sum up solar heat gains
         heatdemand = ventilation_losses + transmission_losses # - solar_gains # [W]
-        return {'Annual heat demand [kWh/a]': heatdemand.sum(), 'Transmission losses [kWh/a]':transmission_losses.sum(), 'Ventilation losses [kWh/a]':ventilation_losses.sum()}, heatdemand
+        return {'Annual heat demand [kWh/a]': heatdemand.sum()/1000, 'Transmission losses [kWh/a]':transmission_losses.sum()/1000, 'Ventilation losses [kWh/a]':ventilation_losses.sum()/1000}, heatdemand
