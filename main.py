@@ -173,7 +173,12 @@ while year <= 2045: # end year
     annual_results.at[year, 'Comfort [=)]'] = rewards["Comfort"]
     annual_results.to_csv('annual_results.csv')
 
-    # print user output
+    # print result overview
+    ''' Co2 emissions, Co2 budget; Annual costs, Bank deposite, '''
+    print(f"    CO2 emissions [t/a]: {ecology_results['CO2 emissions [t]']:.2f}", end=' ')
+    print(f"    Bank balance [Euro/a]: {economy_results['Balance [Euro/a]']:.2f}\n")
+ 
+    # print detailed results
     print(annual_results.loc[year])
     # print(f'CO2 Budget: {me.co2_budget:.2f} t, Bank Deposit: {me.bank_deposit:.2f} Euro, Comfort: {comfort_deviation}\n')
 

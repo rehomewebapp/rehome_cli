@@ -52,7 +52,13 @@ def eco2(year, user, scenario, annual_system_results):
     cost_el = annual_system_results['Electricity grid supply [kWh/a]'] * scenario.eco2_path['cost_el_hh [ct/kWh]'].at[year]/100 # [euro]
     energy_costs   = cost_gas + cost_el # total energy costs [euro]
 
-    economy_results = {"User revenues [euro/a]": revenues, "User expenses [euro/a]": expenses, "Gas cost [euro/a]": cost_gas, "Electricity cost [euro/a]": cost_el, "Energy cost [euro/a]": energy_costs}
+    balance = revenues - expenses - energy_costs
+    economy_results = {"Balance [Euro/a]"      : balance,
+                       "User revenues [euro/a]": revenues, 
+                       "User expenses [euro/a]": expenses, 
+                       "Gas cost [euro/a]": cost_gas, 
+                       "Electricity cost [euro/a]": cost_el, 
+                       "Energy cost [euro/a]": energy_costs}
 
     return ecology_results, economy_results
 
