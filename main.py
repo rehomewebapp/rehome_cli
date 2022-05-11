@@ -178,11 +178,11 @@ while year <= 2045: # end year
     # print result overview
     ''' Co2 emissions, Co2 budget; Annual costs, Bank deposite, '''
     print(f"    CO2 emissions [t/a]  : {ecology_results['CO2 emissions [t]']:4.2f}", end=' ')
-    print(f"    Bank balance [Euro/a]: {economy_results['Balance [Euro/a]']:6.2f}")
+    print(f"    Bank balance [Euro/a]: {economy_results['Balance [Euro/a]']:9.2f}")
  
     # print rewards
     print(f"    CO2 budget [t]       : {rewards['CO2 Budget [t]']:4.2f}", end=' ')
-    print(f"    Bank deposit [Euro]  : {rewards['Bank deposit [euro]']:6.2f}", end=' ')
+    print(f"    Bank deposit [Euro]  : {rewards['Bank deposit [euro]']:9.2f}", end=' ')
     print(f"    Comfort status: {rewards['Comfort']}\n")
 
     # print detailed results
