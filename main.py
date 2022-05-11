@@ -144,6 +144,9 @@ while year <= 2045: # end year
     # call the random event and pass user, building (system) objects (so they can be changed by the event).
     getattr(events, event)(year, me, my_building, my_system, event_states)
 
+    if event != 'nothing':
+        input('Press any key to continue.')
+
     # simulate
     print(f'Year: {year}/45')
     annual_building_results, annual_system_results, ecology_results, economy_results = simulate.calculate(year, me, my_building, my_system, my_scenario, annual_results.loc[year-1])
