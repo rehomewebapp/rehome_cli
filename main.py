@@ -122,7 +122,7 @@ year = initial_year+1 # start year
 while year <= 2045: # end year
     what2do = '0'
     while what2do != '':
-        what2do = input('Enter to Simulate next year; Renovate the building (1); Improve the System (2); Change User Behaviour (3): \n')
+        what2do = input('Enter to Simulate next year; Renovate the building (1); Improve the System (2); Change User Behaviour (3): ')
         if what2do == '1':
             my_building = actions.renovate(building_path)
         elif what2do == '2':
@@ -153,7 +153,6 @@ while year <= 2045: # end year
     
     # calculate rewards
     rewards = balance.calculate(ecology_results, economy_results, annual_results.loc[year-1]) #ToDo add parameters
-    #print(rewards) #ToDo add rewards to annual_results df
 
     # append annual_building_results dict to annual_results df  
     if year == initial_year:
@@ -178,13 +177,20 @@ while year <= 2045: # end year
 
     # print result overview
     ''' Co2 emissions, Co2 budget; Annual costs, Bank deposite, '''
-    print(f"    CO2 emissions [t/a]: {ecology_results['CO2 emissions [t]']:.2f}", end=' ')
-    print(f"    Bank balance [Euro/a]: {economy_results['Balance [Euro/a]']:.2f}\n")
+    print(f"    CO2 emissions [t/a]  : {ecology_results['CO2 emissions [t]']:4.2f}", end=' ')
+    print(f"    Bank balance [Euro/a]: {economy_results['Balance [Euro/a]']:6.2f}")
  
-    # print detailed results
-    print(annual_results.loc[year])
-    # print(f'CO2 Budget: {me.co2_budget:.2f} t, Bank Deposit: {me.bank_deposit:.2f} Euro, Comfort: {comfort_deviation}\n')
+    # print rewards
+    print(f"    CO2 budget [t]       : {rewards['CO2 Budget [t]']:4.2f}", end=' ')
+    print(f"    Bank deposit [Euro]  : {rewards['Bank deposit [euro]']:6.2f}", end=' ')
+    print(f"    Comfort status: {rewards['Comfort']}\n")
 
+    # print detailed results
+    user_input = input('Enter to continue; Show detailed results (1): ')
+    if user_input == '1':
+        print(annual_results.loc[year])
+    
+    # start next year
     year = year + 1
 
     # game over
