@@ -1,5 +1,6 @@
 import yaml
-from pvlib import irradiance
+
+from utilities import calc_irradiance_on_tilted_plane
 
 class System:
     def __init__(self, system_path):
@@ -65,16 +66,8 @@ class Photovoltaic(Component):
         '''
 
         # calculate irradiance on tilted plane
-        irradiance_df = irradiance.get_total_irradiance(surface_tilt = self.tilt_angle,
-                                                        surface_azimuth = self.azimuth_angle,
-                                                        solar_zenith = weather['solar_zenith [deg]'],
-                                                        solar_azimuth = weather['solar_azimuth [deg]'],
-                                                        dni = weather['Gb(n) [W/m^2]'],
-                                                        ghi = weather['G(h) [W/m^2]'],
-                                                        dhi = weather['Gd(h) [W/m^2]'])
-        #print(irradiance_df.head())
+        irradiance_tilted = calc_irradiance_on_tilted_plane(weather, self.tilt_angle, self.azimuth_angle)
 
-        irradiance_tilted = irradiance_df['poa_global']
         temp_amb = weather['T_amb [degC]']
 
         #constant parameters

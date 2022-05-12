@@ -4,6 +4,7 @@ from pathlib import Path
 
 import requests
 import pandas as pd
+from pvlib import irradiance
 
 def path_leaf(path):
     # return the filename, given a filepath
@@ -70,3 +71,15 @@ def read_tmy_data(filepath):
     df.set_index('time(UTC)', inplace = True)
     df.index = pd.to_datetime(df.index, format = '%Y%m%d:%H%M')
     return df[['T2m','G(h)','Gb(n)','Gd(h)']]
+
+
+def calc_irradiance_on_tilted_plane(weather, tilt_angle, azimuth_angle):
+    irradiance_df = irradiance.get_total_irradiance(surface_tilt = tilt_angle,
+                                                        surface_azimuth = azimuth_angle,
+                                                        solar_zenith = weather['solar_zenith [deg]'],
+                                                        solar_azimuth = weather['solar_azimuth [deg]'],
+                                                        dni = weather['Gb(n) [W/m^2]'],
+                                                        ghi = weather['G(h) [W/m^2]'],
+                                                        dhi = weather['Gd(h) [W/m^2]'])
+    irradiance_tilted = irradiance_df['poa_global']
+    return irradiance_tilted
