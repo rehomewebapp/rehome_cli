@@ -2,7 +2,8 @@ ground_area      : 100 # m^2
 stories          : 2   # Number of stories
 story_height     : 2.4 # m
 u_value          : 2   # W/(m^2 K)
-ventilation_rate : 0.3 # [1/h] air exchanges per hour due to ventilation
+ventilation_rate : 0.2 # [1/h] air exchanges per hour due to ventilation
+infiltration_rate: 0.2 # [1/h] air exchanges per hour due to infiltration
 location : 
   latitude       : 48  # [decimal degrees]   
   longitude      :  7  # [decimal degrees]   

@@ -158,5 +158,5 @@ def homeOffice(year, user, building, system, event_states):
 def sealingTape(year, user, building, system, event_states):
     # this event reduces the infiltration rate
     delta_infiltration = 0.1
-    print(f"A friend applies sealing tape at your windows. Your infiltration/ventilation rate drops: {building.ventilation_rate} -> {building.ventilation_rate - delta_infiltration:.2}")
-    building.ventilation_rate = building.ventilation_rate - delta_infiltration
+    print(f"A friend applies sealing tape at your windows. Your infiltration rate drops: {building.infiltration_rate} -> {building.infiltration_rate - delta_infiltration:.2}")
+    building.infiltration_rate = building.infiltration_rate - delta_infiltration

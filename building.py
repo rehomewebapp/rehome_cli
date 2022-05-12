@@ -72,7 +72,8 @@ class Building:
         dT = user.set_point_temperature - self.weather['T_amb [degC]'] # temperature difference between ambient air and comfort temperature
 
         ventilation_losses  = self.ventilation_rate * self.volume * C.DENSITY_AIR * dT # [W]
+        infiltration_losses  = self.infiltration_rate * self.volume * C.DENSITY_AIR * dT # [W]
         transmission_losses = self.u_value * self.opaque_area * dT # [W]
         #solar_gains = 0 # [W] !ToDo iterate over windows and sum up solar heat gains
-        heatdemand = ventilation_losses + transmission_losses # - solar_gains # [W]
-        return {'Annual heat demand [kWh/a]': heatdemand.sum()/1000, 'Transmission losses [kWh/a]':transmission_losses.sum()/1000, 'Ventilation losses [kWh/a]':ventilation_losses.sum()/1000}, heatdemand
+        heatdemand = ventilation_losses + transmission_losses + infiltration_losses # - solar_gains # [W]
+        return {'Annual heat demand [kWh/a]': heatdemand.sum()/1000, 'Transmission losses [kWh/a]':transmission_losses.sum()/1000, 'Ventilation losses [kWh/a]':ventilation_losses.sum()/1000, 'Infiltration losses [kWh/a]':infiltration_losses.sum()/1000}, heatdemand
