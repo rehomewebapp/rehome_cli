@@ -29,7 +29,8 @@ class Building:
         # calculate additional building parameters
         self.floor_area = self.ground_area * self.stories #[m^2]
         self.volume = self.story_height * self.floor_area # [m^3]
-        self.opaque_area = math.sqrt(self.floor_area) * 4 + 2 * self.floor_area #[m^2] assuming quadratic ground shape and flat roof
+        self.opaque_wall_area = math.sqrt(self.floor_area) * 4  # [m^2] assuming quadratic ground shape
+        self.opaque_roof_area = self.ground_area # [m^2] for flat roof
 
         # load location dependend weather data
         self.weather = self.load_weather()
@@ -69,11 +70,29 @@ class Building:
     def calc(self, user):
         '''calculate the annual heat demand of the building
         '''
-        dT = user.set_point_temperature - self.weather['T_amb [degC]'] # temperature difference between ambient air and comfort temperature
+        ground_temperature = 8 # [degC] #ToDo Change to reasonable pattern
+
+        dT = user.set_point_temperature - self.weather['T_amb [degC]'] # [degC] temperature difference between ambient and indoor temperature
+        dT_ground = user.set_point_temperature - ground_temperature # [degC] temperature difference between ground and indoor temperature
 
         ventilation_losses  = self.ventilation_rate * self.volume * C.DENSITY_AIR * dT # [W]
         infiltration_losses  = self.infiltration_rate * self.volume * C.DENSITY_AIR * dT # [W]
-        transmission_losses = self.u_value * self.opaque_area * dT # [W]
+
+        transmission_losses_wall = self.u_value * self.opaque_wall_area * dT # [W]
+        transmission_losses_roof = self.u_value * self.opaque_roof_area * dT # [W]
+        transmission_losses_ground = self.u_value * self.ground_area * dT_ground # [W]
+        transmission_losses = transmission_losses_wall + transmission_losses_roof + transmission_losses_ground #[W]
+        
         #solar_gains = 0 # [W] !ToDo iterate over windows and sum up solar heat gains
-        heatdemand = ventilation_losses + transmission_losses + infiltration_losses # - solar_gains # [W]
-        return {'Annual heat demand [kWh/a]': heatdemand.sum()/1000, 'Transmission losses [kWh/a]':transmission_losses.sum()/1000, 'Ventilation losses [kWh/a]':ventilation_losses.sum()/1000, 'Infiltration losses [kWh/a]':infiltration_losses.sum()/1000}, heatdemand
+        
+        heatdemand = ventilation_losses + transmission_losses_wall + infiltration_losses # - solar_gains # [W]
+        
+        annual_results = {'Annual heat demand [kWh/a]': heatdemand.sum()/1000,
+                          'Transmission losses [kWh/a]':transmission_losses.sum()/1000,
+                          'Transmission losses wall [kWh/a]':transmission_losses_wall.sum()/1000,
+                          'Transmission losses roof [kWh/a]':transmission_losses_roof.sum()/1000,
+                          'Transmission losses ground [kWh/a]':transmission_losses_ground/1000,
+                          'Ventilation losses [kWh/a]':ventilation_losses.sum()/1000,
+                          'Infiltration losses [kWh/a]':infiltration_losses.sum()/1000}
+
+        return annual_results, heatdemand
