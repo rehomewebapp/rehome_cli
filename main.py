@@ -72,7 +72,7 @@ else:
 me = user.User(user_path)
 
 # initalize user columns in results df
-annual_results[['CO2 Budget [t]','Bank Deposit [Euro]', 'Comfort [=)]']] = np.nan
+annual_results[['CO2 Budget [t]','Bank Deposit [Euro]', 'Comfort']] = np.nan
 annual_results.at[initial_year, 'CO2 Budget [t]'] = my_scenario.CO2_budget
 annual_results.at[initial_year, 'Bank Deposit [Euro]'] = me.bank_deposit
 
@@ -154,25 +154,20 @@ while year <= 2045: # end year
     # calculate game log
     game_log = gamelog.calculate(ecology_results, economy_results, annual_results.loc[year-1]) #ToDo add parameters
 
-    # append annual_building_results dict to annual_results df  
-    if year == initial_year:
-        #annual_results = annual_results.join(pd.DataFrame([rewards], index=[year]))
-        annual_results = annual_results.join(pd.DataFrame([annual_building_results], index=[year]))
-        annual_results = annual_results.join(pd.DataFrame([annual_system_results], index=[year]))
-    else:
-        #for key, value in rewards.items():
-        #    annual_results[key] = value 
-        for key, value in annual_building_results.items():
-            annual_results[key] = value
-        for key, value in annual_system_results.items():
-            annual_results[key] = value 
-        
+    # append game_log dict to annual_results df  
+    for key, value in game_log.items():
+            annual_results.at[year, key] = value
     
-    # write annual results to df and csv-file
-    # ToDo: append rewards to annual results similar to bldg and system results
-    annual_results.at[year, 'CO2 Budget [t]'] = game_log["CO2 Budget [t]"]
-    annual_results.at[year, 'Bank Deposit [Euro]'] = game_log["Bank deposit [euro]"]
-    annual_results.at[year, 'Comfort [=)]'] = game_log["Comfort"]
+    # append annual building/sytem/ecologic/economic results dicts to annual_results df
+    dicts = [annual_building_results, annual_system_results, ecology_results, economy_results]
+    for dict in dicts:
+        if year == initial_year:
+            annual_results = annual_results.join(pd.DataFrame([dict], index=[year]))
+        else:
+            for key, value in dict.items():
+                annual_results.at[year, key] = value
+
+    # write annual results to csv-file
     annual_results.to_csv('annual_results.csv')
 
     # print rewards
@@ -182,7 +177,7 @@ while year <= 2045: # end year
  
     # print gamelog
     print(f"    CO2 budget [t]       : {game_log['CO2 Budget [t]']:4.2f}", end=' ')
-    print(f"    Bank deposit [Euro]  : {game_log['Bank deposit [euro]']:9.2f}", end=' ')
+    print(f"    Bank deposit [Euro]  : {game_log['Bank Deposit [Euro]']:9.2f}", end=' ')
     print(f"    Comfort status : {game_log['Comfort']}\n")
 
     # print detailed results
@@ -210,7 +205,7 @@ while year <= 2045: # end year
         print('CO2 budget exceeded!')
         win = False
         break
-    elif game_log["Bank deposit [euro]"] < 0:
+    elif game_log["Bank Deposit [Euro]"] < 0:
         print('Bank account empty!', end = ' ')
         win = False
         break

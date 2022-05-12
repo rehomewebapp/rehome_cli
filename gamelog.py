@@ -11,4 +11,4 @@ def calculate(ecology_results, economy_results, annual_results_last_year):
     # COMFORT
     comfort_deviation = '=)'    # comfort deviation [-]
 
-    return {"CO2 Budget [t]": CO2_budget, "Bank deposit [euro]": bank_deposit, "Comfort": comfort_deviation}
+    return {"CO2 Budget [t]": CO2_budget, "Bank Deposit [Euro]": bank_deposit, "Comfort": comfort_deviation}
