@@ -30,12 +30,14 @@ class Building:
         self.calc_bldg_params()
 
         # load location dependend weather data
-        self.weather = self.load_weather()
+        self.weather = self.get_weather()
 
     def calc_bldg_params(self):
         '''This function calculates dimensions, areas and volume of the building'''
         # Parameters for area estimation method according to IWU 2005
-        window_factor = 0.2 # [m^2 window area /m^2 heated living area] 
+        WINDOW_FACTOR = 0.2 # [m^2 window area /m^2 heated living area]
+
+        self.facade_orientations = np.array([0,90,180,-90]) + self.orientation_offset # [deg]
 
         # dimensions
         self.side_length = math.sqrt(self.ground_area) # [m] assuming quadratic ground shape
@@ -45,15 +47,16 @@ class Building:
         # areas
         self.floor_area = self.ground_area * self.stories # [m^2] heated floor area
         self.opaque_roof_area = math.pow(self.side_length, 2) / math.cos(math.radians(self.roof_angle))  # [m^2]
-        self.window_area = window_factor * self.floor_area # [m^2] acc. to IWU
+        self.window_area = WINDOW_FACTOR * self.floor_area # [m^2] acc. to IWU
 
         self.opaque_wall_area = 4 * self.side_length * self.height - self.window_area # [m^2]
 
         # volume
-        # assuming heated attic
+        # assuming fully heated attic
         self.volume = self.ground_area * self.height + 0.5 * self.side_length * self.roof_height # [m^3]
 
-    def load_weather(self):
+
+    def get_weather(self):
         # If there is no weather data for the given location in the input directory download it
         latitude, longitude = self.location['latitude'], self.location['longitude']
         tmy_filename = f"TMY_lat{latitude}_lon{longitude}.json"
@@ -80,6 +83,12 @@ class Building:
         solar_position = solarposition.get_solarposition(df_weather.index, latitude, longitude)
         df_weather['solar_zenith [deg]'], df_weather['solar_azimuth [deg]'] = solar_position['zenith'], solar_position['azimuth']
 
+        # calculate solar irradiance on vertical planes
+        tilt_angle = 90 # [deg] vertical
+        for orientation in self.facade_orientations:
+            irrad_facade = utilities.calc_irradiance_on_tilted_plane(df_weather, tilt_angle, orientation)
+            df_weather[f'G(v,{orientation}deg) [W/(m^2)'] = irrad_facade
+
         # calculate ground temperature dependent on ambient temperature
         df_weather['T_ground [degC]'] = 4.918 * (0.095 * (df_weather['T_amb [degC]'] - 10.545)).apply(math.tanh) + 8.261 # [degC]
 
@@ -105,17 +114,22 @@ class Building:
         transmission_losses_window = self.u_value_window * self.window_area * dT # [W]
         transmission_losses = transmission_losses_wall + transmission_losses_roof + transmission_losses_ground + transmission_losses_window # [W]
         
-        #solar_gains = 0 # [W] !ToDo iterate over windows and sum up solar heat gains
-        
-        heatdemand = ventilation_losses + transmission_losses_wall + infiltration_losses # - solar_gains # [W]
+        # solar gains assuming equally distributed window areas over orientations
+        solar_gains = 0 # initialization
+        for orientation in self.facade_orientations:
+            solar_gain = self.g_value_window * (1 - self.shading_window) * self.weather[f'G(v,{orientation}deg) [W/(m^2)'] * self.window_area # [W]
+            solar_gains =+ solar_gain # [W]
+
+        heatdemand = ventilation_losses + transmission_losses_wall + infiltration_losses - solar_gains # [W]
         
         annual_results = {'Annual heat demand [kWh/a]': heatdemand.sum()/1000,
-                          'Transmission losses [kWh/a]':transmission_losses.sum()/1000,
-                          'Transmission losses wall [kWh/a]':transmission_losses_wall.sum()/1000,
-                          'Transmission losses roof [kWh/a]':transmission_losses_roof.sum()/1000,
-                          'Transmission losses ground [kWh/a]':transmission_losses_ground.sum()/1000,
-                          'Transmission losses window [kWh/a]':transmission_losses_window.sum()/1000,
-                          'Ventilation losses [kWh/a]':ventilation_losses.sum()/1000,
-                          'Infiltration losses [kWh/a]':infiltration_losses.sum()/1000}
+                          'Transmission losses [kWh/a]': transmission_losses.sum()/1000,
+                          'Transmission losses wall [kWh/a]': transmission_losses_wall.sum()/1000,
+                          'Transmission losses roof [kWh/a]': transmission_losses_roof.sum()/1000,
+                          'Transmission losses ground [kWh/a]': transmission_losses_ground.sum()/1000,
+                          'Transmission losses window [kWh/a]': transmission_losses_window.sum()/1000,
+                          'Ventilation losses [kWh/a]': ventilation_losses.sum()/1000,
+                          'Infiltration losses [kWh/a]': infiltration_losses.sum()/1000,
+                          'Solar gains [kWh/a]': solar_gains.sum()/1000}
 
         return annual_results, heatdemand
