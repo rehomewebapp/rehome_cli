@@ -58,22 +58,25 @@ class Building:
 
         df_weather.rename(columns=column_names, inplace=True)
 
-        #calculate solar position with weather index and add to weather_df
+        # calculate solar position with weather index and add to weather_df
         solar_position = solarposition.get_solarposition(df_weather.index, latitude, longitude)
         df_weather['solar_zenith [deg]'], df_weather['solar_azimuth [deg]'] = solar_position['zenith'], solar_position['azimuth']
 
+        # calculate ground temperature dependent on ambient temperature
+        df_weather['T_ground [degC]'] = 4.918 * (0.095 * (df_weather['T_amb [degC]'] - 10.545)).apply(math.tanh) + 8.261 # [degC]
+
         df_weather.reset_index(inplace = True)
         # print(df_weather.head())
+
         return df_weather
 
 
     def calc(self, user):
         '''calculate the annual heat demand of the building
         '''
-        ground_temperature = 8 # [degC] #ToDo Change to reasonable pattern
 
         dT = user.set_point_temperature - self.weather['T_amb [degC]'] # [degC] temperature difference between ambient and indoor temperature
-        dT_ground = user.set_point_temperature - ground_temperature # [degC] temperature difference between ground and indoor temperature
+        dT_ground = user.set_point_temperature - self.weather['T_ground [degC]'] # [degC] temperature difference between ground and indoor temperature
 
         ventilation_losses  = self.ventilation_rate * self.volume * C.DENSITY_AIR * dT # [W]
         infiltration_losses  = self.infiltration_rate * self.volume * C.DENSITY_AIR * dT # [W]
@@ -91,7 +94,7 @@ class Building:
                           'Transmission losses [kWh/a]':transmission_losses.sum()/1000,
                           'Transmission losses wall [kWh/a]':transmission_losses_wall.sum()/1000,
                           'Transmission losses roof [kWh/a]':transmission_losses_roof.sum()/1000,
-                          'Transmission losses ground [kWh/a]':transmission_losses_ground/1000,
+                          'Transmission losses ground [kWh/a]':transmission_losses_ground.sum()/1000,
                           'Ventilation losses [kWh/a]':ventilation_losses.sum()/1000,
                           'Infiltration losses [kWh/a]':infiltration_losses.sum()/1000}
 
