@@ -1,6 +1,7 @@
 ground_area        : 100 # m^2
 stories            : 2   # Number of stories
 story_height       : 2.4 # m
+roof_angle         : 30  # [deg] 0 deg for flat roof
 u_value_wall       : 2   # W/(m^2 K)
 u_value_roof       : 2   # W/(m^2 K)
 u_value_groundplate: 2   # W/(m^2 K)

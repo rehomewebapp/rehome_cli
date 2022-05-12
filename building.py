@@ -27,10 +27,15 @@ class Building:
             setattr(self, key, value)
 
         # calculate additional building parameters
-        self.floor_area = self.ground_area * self.stories #[m^2]
-        self.volume = self.story_height * self.floor_area # [m^3]
-        self.opaque_wall_area = math.sqrt(self.floor_area) * 4  # [m^2] assuming quadratic ground shape
-        self.opaque_roof_area = self.ground_area # [m^2] for flat roof
+        self.side_length = math.sqrt(self.ground_area) # [m] assuming quadratic ground shape
+        self.height = self.stories * self.story_height # [m] height of stories in total (cubic shape)
+        self.roof_height = 0.5 * self.side_length * math.tan(math.radians(self.roof_angle))
+
+        self.floor_area = self.ground_area * self.stories # [m^2] heated floor area
+        self.opaque_wall_area = 4 * self.side_length * self.height  # [m^2]
+        self.opaque_roof_area = math.pow(self.side_length, 2) / math.cos(math.radians(self.roof_angle))  # [m^2]
+        
+        self.volume = self.ground_area * self.height + 0.5 * self.side_length * self.roof_height # [m^3]
 
         # load location dependend weather data
         self.weather = self.load_weather()
