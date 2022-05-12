@@ -152,7 +152,7 @@ while year <= 2045: # end year
     annual_building_results, annual_system_results, ecology_results, economy_results = simulate.calculate(year, me, my_building, my_system, my_scenario, annual_results.loc[year-1])
     
     # calculate game log
-    game_log = gamelog.calculate(ecology_results, economy_results, annual_results.loc[year-1]) #ToDo add parameters
+    game_log = gamelog.calculate(me, ecology_results, economy_results, annual_results.loc[year-1]) #ToDo add parameters
 
     # append game_log dict to annual_results df  
     for key, value in game_log.items():
