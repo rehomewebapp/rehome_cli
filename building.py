@@ -33,15 +33,24 @@ class Building:
         self.weather = self.load_weather()
 
     def calc_bldg_params(self):
-        '''This function calculates geometry, areas and volume of the building'''
+        '''This function calculates dimensions, areas and volume of the building'''
+        # Parameters for area estimation method according to IWU 2005
+        window_factor = 0.2 # [m^2 window area /m^2 heated living area] 
+
+        # dimensions
         self.side_length = math.sqrt(self.ground_area) # [m] assuming quadratic ground shape
         self.height = self.stories * self.story_height # [m] height of stories in total (cubic shape)
         self.roof_height = 0.5 * self.side_length * math.tan(math.radians(self.roof_angle))
 
+        # areas
         self.floor_area = self.ground_area * self.stories # [m^2] heated floor area
-        self.opaque_wall_area = 4 * self.side_length * self.height  # [m^2]
         self.opaque_roof_area = math.pow(self.side_length, 2) / math.cos(math.radians(self.roof_angle))  # [m^2]
-        
+        self.window_area = window_factor * self.floor_area # [m^2] acc. to IWU
+
+        self.opaque_wall_area = 4 * self.side_length * self.height - self.window_area # [m^2]
+
+        # volume
+        # assuming heated attic
         self.volume = self.ground_area * self.height + 0.5 * self.side_length * self.roof_height # [m^3]
 
     def load_weather(self):
@@ -93,7 +102,8 @@ class Building:
         transmission_losses_wall = self.u_value_wall * self.opaque_wall_area * dT # [W]
         transmission_losses_roof = self.u_value_roof * self.opaque_roof_area * dT # [W]
         transmission_losses_ground = self.u_value_groundplate * self.ground_area * dT_ground # [W]
-        transmission_losses = transmission_losses_wall + transmission_losses_roof + transmission_losses_ground #[W]
+        transmission_losses_window = self.u_value_window * self.window_area * dT # [W]
+        transmission_losses = transmission_losses_wall + transmission_losses_roof + transmission_losses_ground + transmission_losses_window # [W]
         
         #solar_gains = 0 # [W] !ToDo iterate over windows and sum up solar heat gains
         
@@ -104,6 +114,7 @@ class Building:
                           'Transmission losses wall [kWh/a]':transmission_losses_wall.sum()/1000,
                           'Transmission losses roof [kWh/a]':transmission_losses_roof.sum()/1000,
                           'Transmission losses ground [kWh/a]':transmission_losses_ground.sum()/1000,
+                          'Transmission losses window [kWh/a]':transmission_losses_window.sum()/1000,
                           'Ventilation losses [kWh/a]':ventilation_losses.sum()/1000,
                           'Infiltration losses [kWh/a]':infiltration_losses.sum()/1000}
 
