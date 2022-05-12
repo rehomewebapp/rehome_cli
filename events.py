@@ -114,13 +114,14 @@ def balconyPV(year, user, building, system, event_states):
     system.Photovoltaic.power_nom = system.Photovoltaic.power_nom + delta_power
 
 def coldYear(year, user, building, system, event_states):
-    # this event increases the set point temperature (instead of the ambient temperature) for one year
+    # this event increases the set point and comfort temperature (instead of the ambient temperature) for one year
     temp_amb_drop = 3 # [degC]
 
     # check if temperature has to be reset
     if 'coldYear' in event_states:
         if year == event_states['coldYear']:
             user.comfort_temperature = user.comfort_temperature - temp_amb_drop
+            user.set_point_temperature = user.set_point_temperature - temp_amb_drop
             print(f"Ambient temperature back at normal level.")
             input('Press any key to continue.')
             event_states.pop('coldYear', None) # remove event from event_states dictionary
@@ -128,6 +129,7 @@ def coldYear(year, user, building, system, event_states):
 
     print(f"Brrr. It's cold out there. This year the ambient temperature is in average {temp_amb_drop} degC cooler than usual.")
     user.comfort_temperature = user.comfort_temperature + temp_amb_drop
+    user.set_point_temperature = user.set_point_temperature + temp_amb_drop
     event_states['coldYear'] = year + 1
 
 def homeOffice(year, user, building, system, event_states):
@@ -135,10 +137,11 @@ def homeOffice(year, user, building, system, event_states):
     delta_temp = 2 #[degC]
     delta_el = 500 # [kWh/a]
 
-    # check if temperature and annual electricity demand has to be reset
+    # check if temperatures and annual electricity demand has to be reset
     if 'homeOffice' in event_states:
         if year == event_states['homeOffice']:
             user.comfort_temperature = user.comfort_temperature - delta_temp
+            user.set_point_temperature = user.set_point_temperature - delta_temp
             user.annual_el_demand = user.annual_el_demand - delta_el
             print(f"Back to office. Annual electricity demand and set point temperature back to {user.annual_el_demand} kWh and {user.comfort_temperature} degC.")
             input('Press any key to continue.')
@@ -146,8 +149,9 @@ def homeOffice(year, user, building, system, event_states):
         return
     
     duration = random.randint(1,3)
-    print(f"You work in homeoffice for {duration} years. Your annual electricity demand and the set point temperature of your heating system increase: {user.annual_el_demand} kWh -> {user.annual_el_demand + delta_el} kWh and {user.comfort_temperature} degC -> {user.comfort_temperature + delta_temp} degC")
+    print(f"You work in homeoffice for {duration} years. Your annual electricity demand such as comfort and set point temperature of your heating system increase: {user.annual_el_demand} kWh -> {user.annual_el_demand + delta_el} kWh and {user.comfort_temperature} degC -> {user.comfort_temperature + delta_temp} degC")
     user.comfort_temperature = user.comfort_temperature + delta_temp
+    user.set_point_temperature = user.set_point_temperature + delta_temp
     user.annual_el_demand = user.annual_el_demand + delta_el
     event_states['homeOffice'] = year + duration
 

@@ -69,7 +69,7 @@ class Building:
     def calc(self, user):
         '''calculate the annual heat demand of the building
         '''
-        dT = user.comfort_temperature - self.weather['T_amb [degC]'] # temperature difference between ambient air and comfort temperature
+        dT = user.set_point_temperature - self.weather['T_amb [degC]'] # temperature difference between ambient air and comfort temperature
 
         ventilation_losses  = self.ventilation_rate * self.volume * C.DENSITY_AIR * dT # [W]
         transmission_losses = self.u_value * self.opaque_area * dT # [W]

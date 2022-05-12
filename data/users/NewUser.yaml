@@ -5,4 +5,5 @@ monthly_loan_payoff   : 500  # [euros] bank credit for the building
 monthly_living_cost   : 500  # [euros] groceries
 monthly_entertainment : 400  # [euros] internet, holidays, ... 
 annual_el_demand      : 1500 # [kWh] household electricity demand for lighting and appliances
+set_point_temperature : 20   # [degC]
 comfort_temperature   : 21   # [degC]
