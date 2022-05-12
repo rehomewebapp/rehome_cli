@@ -4,8 +4,8 @@ def calculate(ecology_results, economy_results, annual_results_last_year):
     #print(f"CO2 emissions: {co2_emissions:.2f} t/a", end = ", ")
 
     # ECONOMY
-    balance = economy_results["User revenues [euro/a]"] - economy_results["User expenses [euro/a]"] - economy_results["Energy cost [euro/a]"]
-    bank_deposit = annual_results_last_year['Bank Deposit [Euro]'] + balance # [euro]
+    #balance = economy_results["User revenues [euro/a]"] - economy_results["User expenses [euro/a]"] - economy_results["Energy cost [euro/a]"]
+    bank_deposit = annual_results_last_year['Bank Deposit [Euro]'] + economy_results["Balance [Euro/a]"] # [euro]
     #print(f"Bank balance: {balance:.2f} euro/a")
 
     # COMFORT

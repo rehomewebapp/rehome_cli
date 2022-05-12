@@ -21,7 +21,7 @@ import actions
 import events
 import simulate
 import scenario
-import balance
+import gamelog
 
 # intro
 print("Welcome to REhome!")
@@ -151,8 +151,8 @@ while year <= 2045: # end year
     print(f'Year: {year}/45')
     annual_building_results, annual_system_results, ecology_results, economy_results = simulate.calculate(year, me, my_building, my_system, my_scenario, annual_results.loc[year-1])
     
-    # calculate rewards
-    rewards = balance.calculate(ecology_results, economy_results, annual_results.loc[year-1]) #ToDo add parameters
+    # calculate game log
+    game_log = gamelog.calculate(ecology_results, economy_results, annual_results.loc[year-1]) #ToDo add parameters
 
     # append annual_building_results dict to annual_results df  
     if year == initial_year:
@@ -170,20 +170,20 @@ while year <= 2045: # end year
     
     # write annual results to df and csv-file
     # ToDo: append rewards to annual results similar to bldg and system results
-    annual_results.at[year, 'CO2 Budget [t]'] = rewards["CO2 Budget [t]"]
-    annual_results.at[year, 'Bank Deposit [Euro]'] = rewards["Bank deposit [euro]"]
-    annual_results.at[year, 'Comfort [=)]'] = rewards["Comfort"]
+    annual_results.at[year, 'CO2 Budget [t]'] = game_log["CO2 Budget [t]"]
+    annual_results.at[year, 'Bank Deposit [Euro]'] = game_log["Bank deposit [euro]"]
+    annual_results.at[year, 'Comfort [=)]'] = game_log["Comfort"]
     annual_results.to_csv('annual_results.csv')
 
-    # print result overview
+    # print rewards
     ''' Co2 emissions, Co2 budget; Annual costs, Bank deposite, '''
     print(f"    CO2 emissions [t/a]  : {ecology_results['CO2 emissions [t]']:4.2f}", end=' ')
     print(f"    Bank balance [Euro/a]: {economy_results['Balance [Euro/a]']:9.2f}")
  
-    # print rewards
-    print(f"    CO2 budget [t]       : {rewards['CO2 Budget [t]']:4.2f}", end=' ')
-    print(f"    Bank deposit [Euro]  : {rewards['Bank deposit [euro]']:9.2f}", end=' ')
-    print(f"    Comfort status: {rewards['Comfort']}\n")
+    # print gamelog
+    print(f"    CO2 budget [t]       : {game_log['CO2 Budget [t]']:4.2f}", end=' ')
+    print(f"    Bank deposit [Euro]  : {game_log['Bank deposit [euro]']:9.2f}", end=' ')
+    print(f"    Comfort status : {game_log['Comfort']}\n")
 
     # print detailed results
     user_input = '0'
@@ -206,11 +206,11 @@ while year <= 2045: # end year
     year = year + 1
 
     # game over
-    if rewards["CO2 Budget [t]"] < 0:
+    if game_log["CO2 Budget [t]"] < 0:
         print('CO2 budget exceeded!')
         win = False
         break
-    elif rewards["Bank deposit [euro]"] < 0:
+    elif game_log["Bank deposit [euro]"] < 0:
         print('Bank account empty!', end = ' ')
         win = False
         break
