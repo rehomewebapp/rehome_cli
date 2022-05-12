@@ -81,9 +81,9 @@ class Building:
         ventilation_losses  = self.ventilation_rate * self.volume * C.DENSITY_AIR * dT # [W]
         infiltration_losses  = self.infiltration_rate * self.volume * C.DENSITY_AIR * dT # [W]
 
-        transmission_losses_wall = self.u_value * self.opaque_wall_area * dT # [W]
-        transmission_losses_roof = self.u_value * self.opaque_roof_area * dT # [W]
-        transmission_losses_ground = self.u_value * self.ground_area * dT_ground # [W]
+        transmission_losses_wall = self.u_value_wall * self.opaque_wall_area * dT # [W]
+        transmission_losses_roof = self.u_value_roof * self.opaque_roof_area * dT # [W]
+        transmission_losses_ground = self.u_value_groundplate * self.ground_area * dT_ground # [W]
         transmission_losses = transmission_losses_wall + transmission_losses_roof + transmission_losses_ground #[W]
         
         #solar_gains = 0 # [W] !ToDo iterate over windows and sum up solar heat gains
