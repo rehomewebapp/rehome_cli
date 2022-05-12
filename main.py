@@ -120,15 +120,15 @@ event_states = {} # initalize event states, to store event information for durat
 win = True
 year = initial_year+1 # start year
 while year <= 2045: # end year
-    what2do = '0'
-    while what2do != '':
-        what2do = input('Enter to Simulate next year; Renovate the building (1); Improve the System (2); Change User Behaviour (3): ')
-        if what2do == '1':
+    user_input = '0'
+    while user_input != '':
+        user_input = input('Enter to Simulate next year; Renovate the building (1); Improve the System (2); Change User Behaviour (3): ')
+        if user_input == '1':
             my_building = actions.renovate(building_path)
-        elif what2do == '2':
+        elif user_input == '2':
             print("Let's improve the System Performance!")
             my_system = actions.optimize(system_path)
-        elif what2do == '3':
+        elif user_input == '3':
             print("Let's change the user behaviour!")
             me = actions.adopt(user_path)
 
@@ -186,10 +186,22 @@ while year <= 2045: # end year
     print(f"    Comfort status: {rewards['Comfort']}\n")
 
     # print detailed results
-    user_input = input('Enter to continue; Show detailed results (1): ')
-    if user_input == '1':
-        print(annual_results.loc[year])
-    
+    user_input = '0'
+    while user_input != '':
+        user_input = input('Enter to continue; Show building results (1); Show system results (2); Show ecologic results (3); Show economic results (4) : ')
+        if user_input == '1':
+            for key, value in annual_building_results.items():
+                print(f"{key} : {value}")
+        if user_input == '2':
+            for key, value in annual_system_results.items():
+                print(f"{key} : {value}")
+        if user_input == '3':
+            for key, value in ecology_results.items():
+                print(f"{key} : {value}")
+        if user_input == '4':
+            for key, value in economy_results.items():
+                print(f"{key} : {value}")
+
     # start next year
     year = year + 1
 
