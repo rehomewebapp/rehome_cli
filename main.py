@@ -75,6 +75,7 @@ me = user.User(user_path)
 annual_results[['CO2 Budget [t]','Bank Deposit [Euro]', 'Comfort']] = np.nan
 annual_results.at[initial_year, 'CO2 Budget [t]'] = my_scenario.CO2_budget
 annual_results.at[initial_year, 'Bank Deposit [Euro]'] = me.bank_deposit
+annual_results.at[initial_year, 'Comfort'] = " =) =) =)"
 
 print(f"Hello {me.name} :).", end = ' ')
 
@@ -149,17 +150,17 @@ while year <= 2045: # end year
 
     # simulate
     print(f'Year: {year}/45')
-    annual_building_results, annual_system_results, ecology_results, economy_results = simulate.calculate(year, me, my_building, my_system, my_scenario, annual_results.loc[year-1])
+    annual_building_results, annual_system_results, ecology_results, economy_results, comfort_deviation = simulate.calculate(year, me, my_building, my_system, my_scenario, annual_results.loc[year-1])
     
     # calculate game log
-    game_log = gamelog.calculate(me, ecology_results, economy_results, annual_results.loc[year-1]) #ToDo add parameters
+    game_log = gamelog.calculate(ecology_results, economy_results, comfort_deviation, annual_results.loc[year-1]) #ToDo add parameters
 
     # append game_log dict to annual_results df  
     for key, value in game_log.items():
             annual_results.at[year, key] = value
     
     # append annual building/sytem/ecologic/economic results dicts to annual_results df
-    dicts = [annual_building_results, annual_system_results, ecology_results, economy_results]
+    dicts = [annual_building_results, annual_system_results, ecology_results, economy_results, comfort_deviation]
     for dict in dicts:
         if year == initial_year:
             annual_results = annual_results.join(pd.DataFrame([dict], index=[year]))
@@ -173,7 +174,8 @@ while year <= 2045: # end year
     # print rewards
     ''' Co2 emissions, Co2 budget; Annual costs, Bank deposite, '''
     print(f"    CO2 emissions [t/a]  : {ecology_results['CO2 emissions [t]']:4.2f}", end=' ')
-    print(f"    Bank balance [Euro/a]: {economy_results['Balance [Euro/a]']:9.2f}")
+    print(f"    Bank balance [Euro/a]: {economy_results['Balance [Euro/a]']:9.2f}", end=' ')
+    print(f"    Comfort deviation [degC]: {comfort_deviation['Comfort deviation [degC]']:9.2f}\n")
  
     # print gamelog
     print(f"    CO2 budget [t]       : {game_log['CO2 Budget [t]']:4.2f}", end=' ')
@@ -207,6 +209,10 @@ while year <= 2045: # end year
         break
     elif game_log["Bank Deposit [Euro]"] < 0:
         print('Bank account empty!', end = ' ')
+        win = False
+        break
+    elif game_log['Comfort'] == "":
+        print('Comfort violated!', end = ' ')
         win = False
         break
 

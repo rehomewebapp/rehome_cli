@@ -6,32 +6,18 @@ def calculate(year, user, building, system, scenario, annual_results_last_year):
 
     # User
     hourly_el_demand = user.profile['el_hh [W]']    # Wh
-    annual_el_hh  = hourly_el_demand.sum()    # Wh 
+    annual_el_hh  = hourly_el_demand.sum()    # Wh
     
     # System
     annual_system_results, hourly_used_gas, hourly_el_feedin, hourly_el_supply = system.calc(hourly_heat_demand, hourly_el_demand, building.weather) # kWh, Wh
 
-    # Eco2 analysis
-    ecology_results, economy_results = eco2(year, user, scenario, annual_system_results)
+    # Calculate economic, ecologic and comfort balances
+    ecology_results, economy_results, comfort_deviation = balance(year, user, scenario, annual_system_results)
 
-    return annual_building_results, annual_system_results, ecology_results, economy_results
-
-# {'Building':annual_building_results, 'System':0, 'Eco2': 0 } 
+    return annual_building_results, annual_system_results, ecology_results, economy_results, comfort_deviation
 
 
-''' !toDo simplify simulate .. outsource calculations, so that we only have to call a few functions
-
-def simulate(init, user, building, system, scenario):
-    
-    annual_building_results, hourly_heatdemand = building.calc(user) # Series/reihe ['RH', 'TRANS_TOTAL', 'VENT', 'TRANS_ROOF', 'TRANS_WINDOW', 'SOLAR_GAINS', 'INTERAL_GAINS_APP',...]
-    annual_system_results, annual_grid_interactions = system.calc(hourly_heatdemand, user) #Series/reihe ['GasBoiler': ['GasConsumption', 'FullLoadHours', 'Q_th'..], 'PV': ['Autarky', 'ElectricityProduction', 'Feedin', ], 'HeatPump': ['Q_th', 'E_el', 'FullLoadHours', 'El_from_PV', 'El_from_Storage', 'COP'] ]
-    eco2_results = eco2.calc(annual_grid_interactions)
-    results = [annual_building_results, annual_system_results, eco2_results]
-
-    return results   
-'''
-
-def eco2(year, user, scenario, annual_system_results):
+def balance(year, user, scenario, annual_system_results):
     # ECOLOGY
     # CO2 emissions
     spec_co2_gas = scenario.eco2_path['spec_CO2_gas [g/kWh]'].at[year]
@@ -60,5 +46,8 @@ def eco2(year, user, scenario, annual_system_results):
                        "Electricity cost [euro/a]": cost_el, 
                        "Energy cost [euro/a]": energy_costs}
 
-    return ecology_results, economy_results
+    # COMFORT
+    comfort_deviation = {"Comfort deviation [degC]" : user.comfort_temperature - user.set_point_temperature}    # [degC]
+
+    return ecology_results, economy_results, comfort_deviation
 

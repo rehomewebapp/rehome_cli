@@ -1,4 +1,4 @@
-def calculate(user, ecology_results, economy_results, annual_results_last_year):
+def calculate(ecology_results, economy_results, comfort_deviation, annual_results_last_year):
     # ECOLOGY
     CO2_budget = annual_results_last_year['CO2 Budget [t]'] - ecology_results["CO2 emissions [t]"]
 
@@ -6,13 +6,8 @@ def calculate(user, ecology_results, economy_results, annual_results_last_year):
     bank_deposit = annual_results_last_year['Bank Deposit [Euro]'] + economy_results["Balance [Euro/a]"] # [euro]
 
     # COMFORT
-    comfort_deviation = user.comfort_temperature - user.set_point_temperature    # comfort deviation [degC]
-    if abs(comfort_deviation) < 1:
-        comfort = "=)"
-    elif abs(comfort_deviation) < 3:
-        comfort = "=/"
-    else:
-        comfort = "=("
-    
+    comfort = annual_results_last_year["Comfort"]
+    if abs(comfort_deviation["Comfort deviation [degC]"]) > 2:
+        comfort = comfort[:-3]
 
     return {"CO2 Budget [t]": CO2_budget, "Bank Deposit [Euro]": bank_deposit, "Comfort": comfort}
