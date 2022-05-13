@@ -75,7 +75,6 @@ class Building:
         self.facade_orientations = np.array([0,90,180,-90]) + self.orientation_offset # [deg]
 
     def get_u_values(self, file, path):
-        print("get u-values in progress...")
         u_values = pd.read_csv("data/components/u_values.csv", index_col = "bac").loc[self.bac]
         window_types = {'0' : 'wood_single-glazed', '1' : 'wood_double-glazed', '2' : 'plastic_iso', '3' : 'metal_iso'}
         components = ['facade', 'roof', 'upper_ceiling', 'groundplate']
@@ -93,7 +92,7 @@ class Building:
         # write u-values to bldg config file
         for component in components:
             u_value = getattr(self, f"u_value_{component}")
-            print(f"{component} = {u_value}")
+            #print(f"{component} = {u_value}")
             file[f"u_value_{component}"] = str(getattr(self, f"u_value_{component}"))
         with open(path, 'w') as f:
             yaml.dump(file, f)
