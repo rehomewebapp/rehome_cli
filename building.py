@@ -34,7 +34,7 @@ class Building:
         if self.use_default_u_values == 'yes':
             u_values = pd.read_csv("data/components/u_values.csv", index_col = "bac").loc[self.bac]
             #ToDo implement material selection and overwriting u-values in bldg.yaml
-            self.u_value_wall = u_values['facade massive']
+            self.u_value_facade = u_values['facade massive']
             self.u_value_roof = u_values['roof wooden']
             self.u_value_upper_ceiling = u_values['upper ceiling wooden']
             self.u_value_groundplate = u_values['groundplate massive']
@@ -142,7 +142,7 @@ class Building:
 
         # Transmission losses
         # from heated space to exterior through building envelope
-        transmission_losses_wall = self.u_value_wall * self.area_facade * dT # [W]
+        transmission_losses_facade = self.u_value_facade * self.area_facade * dT # [W]
         transmission_losses_window = self.u_value_window * self.area_window * dT # [W]
         transmission_losses_roof_heated = x_attic[self.attic] * (self.u_value_roof * self.area_roof + self.u_value_upper_ceiling * self.area_upper_ceiling) * dT # [W]
         # from heated space to exterior through unheated space
@@ -152,7 +152,7 @@ class Building:
         # from heated space to ground through unheated space
         transmission_losses_ground_unheated = self.u_value_groundplate * (1 - x_basement[self.basement]) * (self.area_ground + self.area_basement_wall) * dT_ground * f_corr2ground # [W]
         # total
-        transmission_losses = transmission_losses_wall + transmission_losses_window + transmission_losses_roof_heated + transmission_losses_roof_unheated + transmission_losses_ground_heated + transmission_losses_ground_unheated # [W]
+        transmission_losses = transmission_losses_facade + transmission_losses_window + transmission_losses_roof_heated + transmission_losses_roof_unheated + transmission_losses_ground_heated + transmission_losses_ground_unheated # [W]
         
         # solar gains assuming equally distributed window areas over orientations
         solar_gains = 0 # initialization
@@ -160,11 +160,11 @@ class Building:
             solar_gain = self.g_value_window * (1 - self.shading_window) * self.weather[f'G(v,{orientation}deg) [W/(m^2)'] * self.area_window/4 # [W]
             solar_gains =+ solar_gain # [W]
 
-        heatdemand = ventilation_losses + transmission_losses_wall + infiltration_losses - solar_gains # [W]
+        heatdemand = ventilation_losses + transmission_losses_facade + infiltration_losses - solar_gains # [W]
         
         annual_results = {'Annual heat demand [kWh/a]': heatdemand.sum()/1000,
                           'Transmission losses [kWh/a]': transmission_losses.sum()/1000,
-                          'Transmission losses wall [kWh/a]': transmission_losses_wall.sum()/1000,
+                          'Transmission losses facade [kWh/a]': transmission_losses_facade.sum()/1000,
                           'Transmission losses roof [kWh/a]': transmission_losses_roof_heated.sum()/1000+transmission_losses_roof_unheated.sum()/1000,
                           'Transmission losses ground [kWh/a]': transmission_losses_ground_heated.sum()/1000+transmission_losses_ground_unheated.sum()/1000,
                           'Transmission losses window [kWh/a]': transmission_losses_window.sum()/1000,

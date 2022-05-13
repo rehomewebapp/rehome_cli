@@ -12,7 +12,7 @@ bac                : 1958-1968 # (building age class) <1918, 1919-1948, 1949-195
 orientation_offset : 0   # [deg] (0 : N/E/S/W, 45 : NE/SE/SW/NW)
 
 use_default_u_values  : 'yes' # yes, no (manually specify u-values below)
-u_value_wall          : 2   # W/(m^2 K)
+u_value_facade        : 2   # W/(m^2 K)
 u_value_roof          : 2   # W/(m^2 K)
 u_value_upper_ceiling : 2   # W/(m^2 K)
 u_value_groundplate   : 2   # W/(m^2 K)
