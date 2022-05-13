@@ -33,12 +33,17 @@ class Building:
         # get u-values
         if self.use_default_u_values == 'yes':
             u_values = pd.read_csv("data/components/u_values.csv", index_col = "bac").loc[self.bac]
-            #ToDo implement material selection and overwriting u-values in bldg.yaml
-            self.u_value_facade = u_values['facade massive']
-            self.u_value_roof = u_values['roof wooden']
-            self.u_value_upper_ceiling = u_values['upper ceiling wooden']
-            self.u_value_groundplate = u_values['groundplate massive']
-            self.u_value_window = u_values['window wood double-glazed']
+            #ToDo overwriting u-values in bldg.yaml
+            window_types = {'0' : 'wood_single-glazed', '1' : 'wood_double-glazed', '2' : 'plastic_iso', '3' : 'metal_iso'}
+            components = ['facade', 'roof', 'upper_ceiling', 'groundplate']
+            for i, component in enumerate(components):
+                construction_type = getattr(self, f"construction_{component}")
+                u_value = float(u_values[f"{component}_{construction_type}"])
+                print(f"{component} = {u_value}")
+                setattr(self, f"construction_{components[i]}", u_value)
+
+            self.u_value_window = u_values[f'window_{window_types[str(self.type_window)]}']
+            print(f"window = {self.u_value_window}")
 
         # load location dependend weather data
         self.weather = self.get_weather()

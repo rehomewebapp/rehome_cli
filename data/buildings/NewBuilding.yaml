@@ -11,6 +11,12 @@ bac                : 1958-1968 # (building age class) <1918, 1919-1948, 1949-195
 
 orientation_offset : 0   # [deg] (0 : N/E/S/W, 45 : NE/SE/SW/NW)
 
+construction_facade        : massive # massive, wooden
+construction_roof          : wooden  # massive, wooden
+construction_upper_ceiling : wooden  # massive, wooden
+construction_groundplate   : massive # massive, wooden
+type_window                : 1       # wood single-glazed (0), wood double-glazed (1), plastic insulating glass (2), alu/steel insulating glass (3)
+
 use_default_u_values  : 'yes' # yes, no (manually specify u-values below)
 u_value_facade        : 2   # W/(m^2 K)
 u_value_roof          : 2   # W/(m^2 K)

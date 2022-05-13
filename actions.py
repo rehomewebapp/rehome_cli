@@ -15,7 +15,7 @@ def insulate(building, component, thickness):
     
 def change_windows(building, type):
     # wood double-glazed (1), plastic insulating glass (2), alu/steel insulating glass (3)
-    types = {'1' : 'window wood double-glazed', '2' : 'window plastic iso', '3' : 'window metal iso'}
+    types = {'1' : 'window_wood_double-glazed', '2' : 'window_plastic_iso', '3' : 'window_metal_iso'}
     u_values = pd.read_csv("data/components/u_values.csv", index_col = "bac").iloc[-1] # use u-values of latest building age class
     new_u_value = u_values[types[type]]
     print(f"Windows exchanged: u-value {building.u_value_window:.2} -> {new_u_value} W/(m^2K)")
