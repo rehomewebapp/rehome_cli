@@ -3,6 +3,7 @@ import os
 import math
 from pathlib import Path
 import numpy as np
+import pandas as pd
 
 import yaml
 from pvlib import solarposition
@@ -28,6 +29,16 @@ class Building:
 
         # calculate building geometry
         self.calc_geometry()
+
+        # get u-values
+        if self.use_default_u_values == 'yes':
+            u_values = pd.read_csv("data/components/u_values.csv", index_col = "bac").loc[self.bac]
+            #ToDo implement material selection and overwriting u-values in bldg.yaml
+            self.u_value_wall = u_values['facade massive']
+            self.u_value_roof = u_values['roof wooden']
+            self.u_value_upper_ceiling = u_values['upper ceiling wooden']
+            self.u_value_groundplate = u_values['groundplate massive']
+            self.u_value_window = u_values['window wood double-glazed']
 
         # load location dependend weather data
         self.weather = self.get_weather()
@@ -118,7 +129,10 @@ class Building:
         dT_ground = user.set_point_temperature - self.weather['T_ground [degC]'] # [degC] between ground and indoor temperature
 
         # temperatures of unheated adjacent rooms according to DIN 12831-1 Table 4
-        temp_adj = {'<1979' : 12, '1980-1995' : 14, '>1995' : 16}
+        bac = ['<1918', '1919-1948', '1949-1957', '1958-1968', '1969-1978', '1979-1983', '1984-1994', '>1995']
+        temp_adj_data = [12, 12, 12, 12, 12, 14, 14, 16]
+        temp_adj = pd.Series(temp_adj_data, index = bac)
+        
         f_corr2ext = (user.set_point_temperature - temp_adj[self.bac]) / dT # [-] temperature correction factor against ambient
         f_corr2ground = (user.set_point_temperature - temp_adj[self.bac]) / dT_ground # [-] temperature correction factor against ground
     
