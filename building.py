@@ -61,27 +61,8 @@ class Building:
         self.volume_heated = 4 * self.area_floor * self.story_height / h_story_nom # [m^3]
         self.volume_air = self.area_floor * h_story_nom # [m^3]
 
-
-
+        # own assumption
         self.facade_orientations = np.array([0,90,180,-90]) + self.orientation_offset # [deg]
-
-        '''
-        # dimensions
-        self.side_length = math.sqrt(self.ground_area) # [m] assuming quadratic ground shape
-        self.height = self.stories * self.story_height # [m] height of stories in total (cubic shape)
-        self.roof_height = 0.5 * self.side_length * math.tan(math.radians(self.roof_angle))
-
-        # areas
-        self.floor_area = self.ground_area * self.stories # [m^2] heated floor area
-        self.opaque_roof_area = math.pow(self.side_length, 2) / math.cos(math.radians(self.roof_angle))  # [m^2]
-        self.window_area = WINDOW_FACTOR * self.floor_area # [m^2] acc. to IWU
-
-        self.opaque_wall_area = 4 * self.side_length * self.height - self.window_area # [m^2]
-
-        # volume
-        # assuming fully heated attic
-        self.volume = self.ground_area * self.height + 0.5 * self.side_length * self.roof_height # [m^3]
-        '''
 
     def get_weather(self):
         # If there is no weather data for the given location in the input directory download it
@@ -132,14 +113,16 @@ class Building:
         x_basement = {'none' : 1, 'unheated' : 0, 'partly heated' : 0.5, 'fully heated' : 1} # transmission factor basement
         x_attic = {'none' : 1, 'unheated' : 0, 'partly heated' : 0.5, 'fully heated' : 1} # transmission factor attic 
 
-        dT = user.set_point_temperature - self.weather['T_amb [degC]'] # [degC] temperature difference between ambient and indoor temperature
-        dT_ground = user.set_point_temperature - self.weather['T_ground [degC]'] # [degC] temperature difference between ground and indoor temperature
+        # temperature differences
+        dT = user.set_point_temperature - self.weather['T_amb [degC]'] # [degC]  between ambient and indoor temperature
+        dT_ground = user.set_point_temperature - self.weather['T_ground [degC]'] # [degC] between ground and indoor temperature
 
         # temperatures of unheated adjacent rooms according to DIN 12831-1 Table 4
         temp_adj = {'<1979' : 12, '1980-1995' : 14, '>1995' : 16}
         f_corr2ext = (user.set_point_temperature - temp_adj[self.bac]) / dT # [-] temperature correction factor against ambient
         f_corr2ground = (user.set_point_temperature - temp_adj[self.bac]) / dT_ground # [-] temperature correction factor against ground
     
+        # ToDo! Check IWU-calculation method of volume
         ventilation_losses  = self.ventilation_rate * self.volume_heated * C.DENSITY_AIR * dT # [W]
         infiltration_losses  = self.infiltration_rate * self.volume_heated * C.DENSITY_AIR * dT # [W]
 
@@ -153,9 +136,9 @@ class Building:
         # from heated space to ground
         transmission_losses_ground_heated = self.u_value_groundplate * x_basement[self.basement] * (self.area_ground + self.area_basement_wall) * dT_ground # [W]
         # from heated space to ground through unheated space
-        transmission_losses_ground_unheated = self.u_value_groundplate * (1 - x_basement[self.basement]) * (self.area_ground + self.area_basement_wall) * dT_ground * f_corr2ground# [W]
+        transmission_losses_ground_unheated = self.u_value_groundplate * (1 - x_basement[self.basement]) * (self.area_ground + self.area_basement_wall) * dT_ground * f_corr2ground # [W]
         # total
-        transmission_losses = transmission_losses_wall + transmission_losses_window + transmission_losses_roof_heated + transmission_losses_roof_unheated + transmission_losses_ground_heated + transmission_losses_ground_unheated# [W]
+        transmission_losses = transmission_losses_wall + transmission_losses_window + transmission_losses_roof_heated + transmission_losses_roof_unheated + transmission_losses_ground_heated + transmission_losses_ground_unheated # [W]
         
         # solar gains assuming equally distributed window areas over orientations
         solar_gains = 0 # initialization
