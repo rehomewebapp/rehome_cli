@@ -70,15 +70,13 @@ else:
 
 # create the user from the selected config file path
 me = user.User(user_path)
+print(f"Hello {me.name} :).", end = ' ')
 
 # initalize user columns in results df
 annual_results[['CO2 Budget [t]','Bank Deposit [Euro]', 'Comfort']] = np.nan
 annual_results.at[initial_year, 'CO2 Budget [t]'] = my_scenario.CO2_budget
 annual_results.at[initial_year, 'Bank Deposit [Euro]'] = me.bank_deposit
 annual_results.at[initial_year, 'Comfort'] = " =) =) =)"
-
-print(f"Hello {me.name} :).", end = ' ')
-
 
 # Let's choose a building config in a simmilar manner
 print('Please choose one of the following buildings:')
