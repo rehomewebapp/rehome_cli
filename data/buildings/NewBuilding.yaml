@@ -1,3 +1,5 @@
+name               : bldg # [string]
+ 
 area_floor         : 50  # [m^2] heated living area
 stories            : 2   # Number of full stories (without basement / attic)
 neighbours         : detached   # detached, semi-detached, terraced
@@ -17,7 +19,7 @@ construction_upper_ceiling : wooden  # massive, wooden
 construction_groundplate   : massive # massive, wooden
 type_window                : 1       # wood single-glazed (0), wood double-glazed (1), plastic insulating glass (2), alu/steel insulating glass (3)
 
-use_default_u_values  : 'yes' # yes, no (manually specify u-values below)
+use_default_u_values  : 1   # yes (1), no (0) (manually specify u-values below)
 u_value_facade        : 2   # W/(m^2 K)
 u_value_roof          : 2   # W/(m^2 K)
 u_value_upper_ceiling : 2   # W/(m^2 K)

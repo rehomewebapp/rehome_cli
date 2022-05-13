@@ -95,6 +95,16 @@ if Path(building_path) == Path('data/buildings/NewBuilding.yaml'):
     new_building_path = Path(f'data/buildings/{building_name}.yaml')
     # create a copy of the default building
     shutil.copy(Path('data/buildings/NewBuilding.yaml'), new_building_path)
+    # write building name to user config file
+    with open(new_building_path, "r") as stream:
+        try:
+            building_file = yaml.load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+    building_file['name'] = building_name
+    with open(new_building_path, 'w') as f:
+        yaml.dump(building_file, f)
+
     # let the user edit the default building config file
     subprocess.call(['nano', new_building_path])
     building_path = new_building_path

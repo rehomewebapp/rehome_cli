@@ -6,6 +6,10 @@ import numpy as np
 import pandas as pd
 
 import yaml
+
+from ruamel.yaml import YAML # this version of pyyaml support dumping without loosing the comments in the .yaml file
+yaml = YAML()
+
 from pvlib import solarposition
 
 import utilities
@@ -18,10 +22,10 @@ class Building:
         # load building parameters from file
         with open(building_path, "r") as stream:
             try:
-                building_params = yaml.safe_load(stream)
+                building_params = yaml.load(stream)
             except yaml.YAMLError as exc:
                 print(exc)
-
+        
         for key, value in building_params.items():
             if verbose == True:
                 print(f"    - {key}, {value}")
@@ -31,7 +35,8 @@ class Building:
         self.calc_geometry()
 
         # get u-values
-        self.get_u_values()
+        if self.use_default_u_values == 1: # yes
+            self.get_u_values(building_params, building_path)
 
         # load location dependend weather data
         self.weather = self.get_weather()
@@ -69,21 +74,31 @@ class Building:
         # own assumption
         self.facade_orientations = np.array([0,90,180,-90]) + self.orientation_offset # [deg]
 
-    def get_u_values(self):
-        if self.use_default_u_values == 'yes':
-            u_values = pd.read_csv("data/components/u_values.csv", index_col = "bac").loc[self.bac]
-            #ToDo overwriting u-values in bldg.yaml
-            window_types = {'0' : 'wood_single-glazed', '1' : 'wood_double-glazed', '2' : 'plastic_iso', '3' : 'metal_iso'}
-            components = ['facade', 'roof', 'upper_ceiling', 'groundplate']
-            for i, component in enumerate(components):
-                construction_type = getattr(self, f"construction_{component}")
-                u_value = float(u_values[f"{component}_{construction_type}"])
-                #print(f"{component} = {u_value}")
-                setattr(self, f"construction_{components[i]}", u_value)
+    def get_u_values(self, file, path):
+        print("get u-values in progress...")
+        u_values = pd.read_csv("data/components/u_values.csv", index_col = "bac").loc[self.bac]
+        window_types = {'0' : 'wood_single-glazed', '1' : 'wood_double-glazed', '2' : 'plastic_iso', '3' : 'metal_iso'}
+        components = ['facade', 'roof', 'upper_ceiling', 'groundplate']
+        for i, component in enumerate(components):
+            construction_type = getattr(self, f"construction_{component}")
+            u_value = float(u_values[f"{component}_{construction_type}"])
+            setattr(self, f"u_value_{components[i]}", u_value)
+            #print(f"u_value_{components[i]} = {u_value}")
+            #print(getattr(self, f"u_value_{components[i]}"))
 
-            self.u_value_window = u_values[f'window_{window_types[str(self.type_window)]}']
-            #print(f"window = {self.u_value_window}")
+        self.u_value_window = u_values[f'window_{window_types[str(self.type_window)]}']
+        #print(f"window = {self.u_value_window}")
 
+        components.append('window')
+        # write u-values to bldg config file
+        for component in components:
+            u_value = getattr(self, f"u_value_{component}")
+            print(f"{component} = {u_value}")
+            file[f"u_value_{component}"] = str(getattr(self, f"u_value_{component}"))
+        with open(path, 'w') as f:
+            yaml.dump(file, f)
+        
+        
     def get_weather(self):
         # If there is no weather data for the given location in the input directory download it
         latitude, longitude = self.location['latitude'], self.location['longitude']
