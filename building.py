@@ -85,7 +85,7 @@ class Building:
             #print(f"u_value_{components[i]} = {u_value}")
             #print(getattr(self, f"u_value_{components[i]}"))
 
-        self.u_value_window = u_values[f'window_{window_types[str(self.type_window)]}']
+        self.u_value_window = float(u_values[f'window_{window_types[str(self.type_window)]}'])
         #print(f"window = {self.u_value_window}")
 
         components.append('window')
@@ -93,7 +93,7 @@ class Building:
         for component in components:
             u_value = getattr(self, f"u_value_{component}")
             #print(f"{component} = {u_value}")
-            file[f"u_value_{component}"] = str(getattr(self, f"u_value_{component}"))
+            file[f"u_value_{component}"] = u_value
         with open(path, 'w') as f:
             yaml.dump(file, f)
         
