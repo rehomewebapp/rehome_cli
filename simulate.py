@@ -31,20 +31,25 @@ def balance(year, user, scenario, annual_system_results):
 
     # ECONOMY
     # annual revenues and expenses
-    revenues, expenses = user.calc() # [euro]
+    revenues, expenses = user.calc() # [Euro]
 
     # energy costs
-    cost_gas = annual_system_results['Gas consumption [kwh/a]'] * scenario.eco2_path['cost_gas [ct/kWh]'].at[year]/100 # [euro]
-    cost_el = annual_system_results['Electricity grid supply [kWh/a]'] * scenario.eco2_path['cost_el_hh [ct/kWh]'].at[year]/100 # [euro]
-    energy_costs   = cost_gas + cost_el # total energy costs [euro]
+    cost_gas = annual_system_results['Gas consumption [kwh/a]'] * scenario.eco2_path['cost_gas [ct/kWh]'].at[year]/100 # [Euro]
+    cost_el = annual_system_results['Electricity grid supply [kWh/a]'] * scenario.eco2_path['cost_el_hh [ct/kWh]'].at[year]/100 # [Euro]
+    energy_costs   = cost_gas + cost_el # total energy costs [Euro]
 
-    balance = revenues - expenses - energy_costs
+    balance = revenues - expenses - energy_costs + user.event_economic_balance
+    
+
     economy_results = {"Balance [Euro/a]"      : balance,
-                       "User revenues [euro/a]": revenues, 
-                       "User expenses [euro/a]": expenses, 
-                       "Gas cost [euro/a]": cost_gas, 
-                       "Electricity cost [euro/a]": cost_el, 
-                       "Energy cost [euro/a]": energy_costs}
+                       "Event balance [Euro/a]": user.event_economic_balance,
+                       "User revenues [Euro/a]": revenues, 
+                       "User expenses [Euro/a]": expenses, 
+                       "Gas cost [Euro/a]": cost_gas, 
+                       "Electricity cost [Euro/a]": cost_el, 
+                       "Energy cost [Euro/a]": energy_costs}
+
+    user.event_economic_balance = 0
 
     # COMFORT
     comfort_deviation = {"Comfort deviation [degC]" : user.comfort_temperature - user.set_point_temperature}    # [degC]

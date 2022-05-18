@@ -2,12 +2,10 @@ import random
 # These events can happen randomly during the obersvation period.
 
 # add new event (the function name) to this list to register it.
-'''
 events = ['nothing', 'inherit', 'nothing', 'sarscov', 'nothing', 'saharaSand', 'nothing', 'unemployed',
           'nothing', 'promotion', 'nothing', 'fridge', 'nothing', 'gasBoilerAging', 'nothing', 'balconyPV',
           'nothing', 'coldYear', 'nothing', 'homeOffice', 'nothing', 'sealingTape'] 
-'''
-events = ['inherit', 'fridge', 'gasBoilerAging']
+
 
 def nothing(year, user, building, system, event_states):
     # The nothing happens event corresonds to a very boring year

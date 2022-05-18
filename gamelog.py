@@ -3,7 +3,7 @@ def calculate(ecology_results, economy_results, comfort_deviation, annual_result
     CO2_budget = annual_results_last_year['CO2 Budget [t]'] - ecology_results["CO2 emissions [t]"]
 
     # ECONOMY
-    bank_deposit = annual_results_last_year['Bank Deposit [Euro]'] + economy_results["Balance [Euro/a]"] # [euro]
+    bank_deposit = annual_results_last_year['Bank Deposit [Euro]'] + economy_results["Balance [Euro/a]"] # [Euro]
 
     # COMFORT
     comfort = annual_results_last_year["Comfort"]
