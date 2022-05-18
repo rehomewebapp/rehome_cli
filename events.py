@@ -2,10 +2,12 @@ import random
 # These events can happen randomly during the obersvation period.
 
 # add new event (the function name) to this list to register it.
+'''
 events = ['nothing', 'inherit', 'nothing', 'sarscov', 'nothing', 'saharaSand', 'nothing', 'unemployed',
           'nothing', 'promotion', 'nothing', 'fridge', 'nothing', 'gasBoilerAging', 'nothing', 'balconyPV',
           'nothing', 'coldYear', 'nothing', 'homeOffice', 'nothing', 'sealingTape'] 
-
+'''
+events = ['inherit', 'fridge', 'gasBoilerAging']
 
 def nothing(year, user, building, system, event_states):
     # The nothing happens event corresonds to a very boring year
@@ -13,9 +15,9 @@ def nothing(year, user, building, system, event_states):
 
 def inherit(year, user, building, system, event_states):
     # This event adds money to your bank account
-    heritage = random.randint(5,50) * user.monthly_sallary # [euro] 
+    heritage = random.randint(5,50) * user.monthly_sallary # [Euro] 
     print(f"You inherit! Added {heritage} € to your bank account.")
-    user.bank_deposit = user.bank_deposit + heritage
+    user.event_economic_balance += heritage
 
 def sarscov(year, user, building, system, event_states):
     # This event increases the ventilation rate of your building
@@ -82,10 +84,11 @@ def promotion(year, user, building, system, event_states):
 
 def fridge(year, user, building, system, event_states):
     # This event reduces the electricity demand and uniquely removes money from the bank account
-    cost = 500 # [euro] 
-    print(f"Your refrigerator is broken. It is replaced by an energy-efficient one. You pay {cost} euro and your annual electricity demand is reduced from {user.annual_el_demand} kWh to {user.annual_el_demand - 100} kWh.")
-    user.bank_deposit = user.bank_deposit - cost
-    user.annual_el_demand = user.annual_el_demand - cost
+    cost = 500 # [Euro] 
+    delta_el = 100 # [kWh/a]
+    print(f"Your refrigerator is broken. It is replaced by an energy-efficient one. You pay {cost} euro and your annual electricity demand is reduced from {user.annual_el_demand} kWh to {user.annual_el_demand - delta_el} kWh.")
+    user.event_economic_balance -= cost # [Euro]
+    user.annual_el_demand = user.annual_el_demand - delta_el
 
 def gasBoilerAging(year, user, building, system, event_states):
     # this event reduces the gas boiler efficiency for one year and creates cost after one year
@@ -94,9 +97,9 @@ def gasBoilerAging(year, user, building, system, event_states):
     # check if efficiency has to be reset
     if 'gasBoilerAging' in event_states:
         if year == event_states['gasBoilerAging']:
-            cost = 1000 # [euro]
+            cost = 1000 # [Euro]
             system.GasBoiler.efficiency = system.GasBoiler.efficiency + delta_efficiency
-            user.bank_deposit = user.bank_deposit - cost # [euro]
+            user.event_economic_balance -=  cost # [Euro]
             print(f"A mechanic repairs your gas boiler for {cost} euro. Resetting efficiency back to {system.GasBoiler.efficiency}.")
             input('Press any key to continue.')
             event_states.pop('gasBoilerAging', None) # remove event from event_states dictionary

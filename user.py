@@ -18,6 +18,7 @@ class User:
             setattr(self, key, value)
 
         self.profile = self.generate_profiles()
+        self.event_economic_balance = 0
         self.bank_deposit = self.initial_bank_deposit
 
     def generate_profiles(self):
