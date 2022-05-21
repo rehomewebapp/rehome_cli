@@ -1,5 +1,7 @@
 import yaml
+import math
 import pandas as pd
+import numpy as np
 
 from utilities import calc_irradiance_on_tilted_plane
 
@@ -54,9 +56,10 @@ class System:
 
     def calc_energy_cost(self, year, scenario, system_results):
         spec_cost_gas = scenario.eco2_path['cost_gas [ct/kWh]'].at[year]
-        spec_cost_el = scenario.eco2_path['cost_el_hh [ct/kWh]'].at[year]
+        spec_cost_el_hh = scenario.eco2_path['cost_el_hh [ct/kWh]'].at[year]
+        spec_cost_el_hp = scenario.eco2_path['cost_el_hp [ct/kWh]'].at[year]
         pv_feedin_tariff = 6 # ct / kWh
-        spec_cost_energy = {'gas' : spec_cost_gas, 'el' : spec_cost_el, 'pv feed-in' : pv_feedin_tariff}
+        spec_cost_energy = {'gas' : spec_cost_gas, 'el hh' : spec_cost_el_hh, 'el hp' : spec_cost_el_hp, 'pv feed-in' : pv_feedin_tariff}
 
         res = pd.DataFrame()
         
@@ -156,3 +159,45 @@ class Photovoltaic(Component):
 class HeatPumpAir(Component):
     def __init__(self, params):
         Component.__init__(self, params)
+        self.energy = "HeatPump El. Consumption [Wh]"
+        self.emission = "HeatPump CO2 emissions [t]"
+        self.cost = "HeatPump El. cost [Euro]"
+
+    def calc_energy(self, heat_demand, el_demand, weather):
+        # calculate sink temperature with heating curve
+        temp_sink = self.hc_const + self.hc_lin * weather['T_amb [degC]'] + self.hc_quad * np.power(weather['T_amb [degC]'],2)
+        
+        #calculate temperature difference between source and sink
+        delta_temp = temp_sink - weather['T_amb [degC]']
+        if isinstance(delta_temp, pd.Series):
+            delta_temp.clip(lower = 0, inplace=True)
+        else:
+            if delta_temp < 0: #if source temperature is higher than sink temperature
+                delta_temp = 0 #set temperature difference to zero
+
+        #calculate thermal power of the heat pump
+        if isinstance(heat_demand, pd.Series):
+            if heat_demand.max()/1000 > self.power_nom:
+                print(f'Heating load can not be covered by the Heat Pump! Maximum heat load : {heat_demand.max()/1000:.2f} kW')
+            power_th = heat_demand.clip(upper = self.power_nom * 1000)
+        else:
+            if heat_demand/1000 < self.power_nom: #if the heating load can be covered by the heat pump
+                power_th = heat_demand #heat delivered by the heat pump equals the heating load
+            else: #if the heating load is bigger than the max heat pump power
+                power_th = self.power_nom * 1000 #heat delivered by the heat pump is max heat pump power
+                print(f'Heating load can not be covered by the Heat Pump! Heat load : {heat_demand/1000:.2f} kW')
+
+        #calculate COP
+        cop = self.c_eff_const + self.c_eff_lin * delta_temp + self.c_eff_quad * np.power(delta_temp,2)
+        
+        #calculate electrical power of the heat pump
+        power_el = power_th / cop
+        return power_el
+
+    def calc_emissions(self, energy, spec_co2):
+        co2_emissions = energy * spec_co2['el'] / 1e9   # [Wh]/1000 * [g/kWh]/1e6 = [tons]
+        return co2_emissions
+
+    def calc_energy_cost(self, energy, spec_cost):
+        energy_cost = energy/1000 * spec_cost['el hp']/100 # [Wh]/1000 * [ct/kWh]/100 = [Euro]
+        return energy_cost

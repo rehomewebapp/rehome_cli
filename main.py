@@ -117,21 +117,7 @@ my_building = building.Building(building_path, verbose = False)
 
 
 # choose system configuration
-print('Please choose one of the following system configurations:')
-existing_systems = glob.glob('data/systems/*.yaml')
-# print all available options
-for cnt, system_path in enumerate(existing_systems):
-    # only print the filename, not the path
-    system_filename = utilities.path_leaf(system_path)
-    system_name = system_filename.split(sep='.')[0]
-    print(f'   - {system_name} ({cnt})')
-selection = int(input(f'Selected System: '))
-system_path = existing_systems[selection]
-
-#system_path = Path('data/systems/NewSystem.yaml')
-#system_path = Path('data/systems/HeatPumpMono.yaml')
-my_system = system.System(system_path)
-
+my_system, system_path = actions.choose_system()
 
 annual_results.to_csv('annual_results.csv')
 
@@ -153,13 +139,19 @@ while year <= 2045: # end year
                 actions.insulate(my_building, component_input, thickness_insulation)
                 input("Press any key to continue")
             elif component_input == '5': # window
-                window_type = input("Select new window type: wood double-glazed (1), plastic insulating glass (2), alu/steel insulating glass (3)")
+                window_type = input("Select new window type: wood double-glazed (1), plastic insulating glass (2), alu/steel insulating glass (3): ")
                 actions.change_windows(my_building, window_type)
                 input("Press any key to continue")
                 
         elif user_input == '2': # change system parameters
-            print("Let's improve the System Performance!")
-            my_system = actions.optimize(system_path)
+            system_input = input("Return (0), Change system (1), Improve current system (2): ")
+            if system_input == '0': # return
+                pass
+            elif system_input == '1': # change system
+                my_system, system_path = actions.choose_system()
+            elif system_input == '2': # edit system
+                print("Let's improve the System Performance!")
+                my_system = actions.optimize(system_path)
         elif user_input == '3': # change user behaviour
             print("Let's change the user behaviour!")
             me = actions.adopt(user_path)

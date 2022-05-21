@@ -1,0 +1,13 @@
+HeatPumpAir:
+  cost_value_a : 3800
+  cost_value_b : -0.4
+  om_cost : 2         # [%/a] operation and maintainance cost relative to the investment cost
+  service_life : 20   # [a]
+  power_nom : 11      # Nominal power in kW
+  c_eff_const: 5      # Efficiency value constant
+  c_eff_lin  : -0.05  # Efficiency value linear
+  c_eff_quad : 0.0002 # Efficiency value quadratic
+  # Heating curve
+  hc_const: 35        # Constant share (NT: 35.0; HT: 55.0)
+  hc_lin:   -0.4      # Linear share (NT: -0.4; HT: -0.4)
+  hc_quad:  0.005     # Quadratic share (NT: 0.005; HT: 0.005)
