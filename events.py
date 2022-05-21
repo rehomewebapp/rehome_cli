@@ -2,8 +2,9 @@ import random
 # These events can happen randomly during the obersvation period.
 
 # add new event (the function name) to this list to register it.
+
 events = ['nothing', 'inherit', 'nothing', 'sarscov', 'nothing', 'saharaSand', 'nothing', 'unemployed',
-          'nothing', 'promotion', 'nothing', 'fridge', 'nothing', 'gasBoilerAging', 'nothing', 'balconyPV',
+          'nothing', 'promotion', 'nothing', 'fridge', 'nothing', 'gasBoilerAging', 
           'nothing', 'coldYear', 'nothing', 'homeOffice', 'nothing', 'sealingTape'] 
 
 
@@ -37,20 +38,22 @@ def sarscov(year, user, building, system, event_states):
     event_states['sarscov'] = year + duration
 
 def saharaSand(year, user, building, system, event_states):
+    if 'Photovoltaic' not in system.components:
+        return -1
     # this event reduces the efficiency of the pv module
     delta_efficiency = 0.2
 
     # check if efficiency has to be reset
     if 'saharaSand' in event_states:
         if year == event_states['saharaSand']:
-            system.Photovoltaic.efficiency_param = system.Photovoltaic.efficiency_param + delta_efficiency
-            print(f"Your PV modules are clean again. Resetting efficiency back to {system.Photovoltaic.efficiency_param}.")
+            system.components['Photovoltaic'].efficiency_param += delta_efficiency
+            print(f"Your PV modules are clean again. Resetting efficiency back to {system.components['Photovoltaic'].efficiency_param}.")
             input('Press any key to continue.')
             event_states.pop('saharaSand', None) # remove event from event_states dictionary
         return
 
-    print(f"Wooow. Everything is covered by sand from Sahara desert - your PV modules operate with reduced efficiency for one year: {system.Photovoltaic.efficiency_param} -> {system.Photovoltaic.efficiency_param - delta_efficiency:.2}")
-    system.Photovoltaic.efficiency_param = system.Photovoltaic.efficiency_param - delta_efficiency
+    print(f"Wooow. Everything is covered by sand from Sahara desert - your PV modules operate with reduced efficiency for one year: {system.components['Photovoltaic'].efficiency_param} -> {system.components['Photovoltaic'].efficiency_param - delta_efficiency:.2}")
+    system.components['Photovoltaic'].efficiency_param = system.components['Photovoltaic'].efficiency_param - delta_efficiency
     event_states['saharaSand'] = year + 1
 
 def unemployed(year, user, building, system, event_states):
@@ -89,6 +92,8 @@ def fridge(year, user, building, system, event_states):
     user.annual_el_demand = user.annual_el_demand - delta_el
 
 def gasBoilerAging(year, user, building, system, event_states):
+    if 'GasBoiler' not in system.components:
+        return -1
     # this event reduces the gas boiler efficiency for one year and creates cost after one year
     delta_efficiency = 0.1
 
@@ -96,23 +101,25 @@ def gasBoilerAging(year, user, building, system, event_states):
     if 'gasBoilerAging' in event_states:
         if year == event_states['gasBoilerAging']:
             cost = 1000 # [Euro]
-            system.GasBoiler.efficiency = system.GasBoiler.efficiency + delta_efficiency
+            system.components['GasBoiler'].efficiency += delta_efficiency
             user.event_economic_balance -=  cost # [Euro]
-            print(f"A mechanic repairs your gas boiler for {cost} euro. Resetting efficiency back to {system.GasBoiler.efficiency}.")
+            print(f"A mechanic repairs your gas boiler for {cost} euro. Resetting efficiency back to {system.components['GasBoiler'].efficiency}.")
             input('Press any key to continue.')
             event_states.pop('gasBoilerAging', None) # remove event from event_states dictionary
         return
 
-    print(f"Uh-oh! The efficiency of the gas boiler drops from {system.GasBoiler.efficiency} to {system.GasBoiler.efficiency-delta_efficiency:.2} due to aging effects.")
-    system.GasBoiler.efficiency = system.GasBoiler.efficiency - delta_efficiency
+    print(f"Uh-oh! The efficiency of the gas boiler drops from {system.components['GasBoiler'].efficiency} to {system.components['GasBoiler'].efficiency-delta_efficiency:.2} due to aging effects.")
+    system.components['GasBoiler'].efficiency -= delta_efficiency
     event_states['gasBoilerAging'] = year + random.randint(1,2)
 
+'''
 def balconyPV(year, user, building, system, event_states):
     # this event increases your installed PV power
     delta_power = 0.6
 
-    print(f"Happy Birthday! Your friends surprise you with a balcony power plant. Your installed PV power increases: {system.Photovoltaic.power_nom} kWp -> {system.Photovoltaic.power_nom + delta_power:.2} kWp")
-    system.Photovoltaic.power_nom = system.Photovoltaic.power_nom + delta_power
+    print(f"Happy Birthday! Your friends surprise you with a balcony power plant. Your installed PV power increases: {system.components['Photovoltaic'].power_nom} kWp -> {system.components['Photovoltaic'].power_nom + delta_power:.2} kWp")
+    system.components['Photovoltaic'].power_nom = system.components['Photovoltaic'].power_nom + delta_power
+'''
 
 def coldYear(year, user, building, system, event_states):
     # this event increases the set point and comfort temperature (instead of the ambient temperature) for one year

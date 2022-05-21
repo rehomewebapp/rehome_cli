@@ -158,11 +158,13 @@ while year <= 2045: # end year
         for key, value in list(event_states.items()): # list enforces a copy of dict - required to avoid removing changing size of dict while iterating over it
             getattr(events, key)(year, me, my_building, my_system, event_states)
 
-    # draw random event
-    event = random.choice(events.events)
-    #print(f'Event: {event}')
-    # call the random event and pass user, building (system) objects (so they can be changed by the event).
-    getattr(events, event)(year, me, my_building, my_system, event_states)
+    event_status = -1
+    while event_status == -1:
+        # draw random event
+        event = random.choice(events.events)
+        #print(f'Event: {event}')
+        # call the random event and pass user, building (system) objects (so they can be changed by the event).
+        event_status = getattr(events, event)(year, me, my_building, my_system, event_states)
 
     if event != 'nothing':
         input('Press any key to continue.')
