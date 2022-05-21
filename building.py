@@ -159,7 +159,6 @@ class Building:
         f_corr2ext = (user.set_point_temperature - temp_adj[self.bac]) / dT # [-] temperature correction factor against ambient
         f_corr2ground = (user.set_point_temperature - temp_adj[self.bac]) / dT_ground # [-] temperature correction factor against ground
     
-        # ToDo! Check IWU-calculation method of volume
         ventilation_losses  = self.ventilation_rate * self.volume_air * C.DENSITY_AIR * dT # [W]
         infiltration_losses  = self.infiltration_rate * self.volume_air * C.DENSITY_AIR * dT # [W]
 
