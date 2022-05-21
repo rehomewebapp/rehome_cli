@@ -68,7 +68,7 @@ class Building:
         self.area_window = p_window * self.area_floor # [m^2]
         self.area_basement_wall = 0.5 * f_basement[self.basement] * self.area_facade_story # [m^2] basement wall areas agains soil / unheated basement
         self.area_facade = self.n_heated_stories * self.area_facade_story - self.area_basement_wall - self.area_window # [m^2] total opaque facade area
-        self.volume_heated = 4 * self.area_floor * self.story_height / h_story_nom # [m^3]
+        #self.volume_heated = 4 * self.area_floor * self.story_height / h_story_nom # [m^3]
         self.volume_air = self.area_floor * h_story_nom # [m^3]
 
         # own assumption
@@ -160,8 +160,8 @@ class Building:
         f_corr2ground = (user.set_point_temperature - temp_adj[self.bac]) / dT_ground # [-] temperature correction factor against ground
     
         # ToDo! Check IWU-calculation method of volume
-        ventilation_losses  = self.ventilation_rate * self.volume_heated * C.DENSITY_AIR * dT # [W]
-        infiltration_losses  = self.infiltration_rate * self.volume_heated * C.DENSITY_AIR * dT # [W]
+        ventilation_losses  = self.ventilation_rate * self.volume_air * C.DENSITY_AIR * dT # [W]
+        infiltration_losses  = self.infiltration_rate * self.volume_air * C.DENSITY_AIR * dT # [W]
 
         # Transmission losses
         # from heated space to exterior through building envelope
