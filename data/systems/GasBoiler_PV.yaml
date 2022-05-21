@@ -1,0 +1,17 @@
+GasBoiler:
+  cost_value_a : 2000
+  cost_value_b : -0.6
+  om_cost : 3 # [%/a] operation and maintainance cost relative to the investment cost
+  service_life : 20 # [a]
+  efficiency : 0.95 # [kWhUse/kWhFuel] 0.95 for condensing, 0.9 for non condensing
+
+Photovoltaic:
+  cost_value_a : 1400
+  cost_value_b : -0.1
+  om_cost : 2 # [%/a]
+  service_life : 25 # [a]
+  power_nom : 30 # [kWp]
+  efficiency_param : 0.95
+  neg_temp_coeff : 0.5 # [%/K]
+  tilt_angle : 30 # [deg] 0 deg = horizontal
+  azimuth_angle : 0 # [deg] 0deg = S, 90deg = W

@@ -31,7 +31,7 @@ class User:
 
 
 
-    def calc(self):
+    def calc_economy(self):
         annual_sallary = 13 * self.monthly_sallary # [Euro] including christmas bonus
         annual_costs = 12 * (self.monthly_living_cost + self.monthly_entertainment + self.monthly_loan_payoff) # [Euro]
 

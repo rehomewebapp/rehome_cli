@@ -117,7 +117,19 @@ my_building = building.Building(building_path, verbose = False)
 
 
 # choose system configuration
-system_path = Path('data/systems/NewSystem.yaml')
+print('Please choose one of the following system configurations:')
+existing_systems = glob.glob('data/systems/*.yaml')
+# print all available options
+for cnt, system_path in enumerate(existing_systems):
+    # only print the filename, not the path
+    system_filename = utilities.path_leaf(system_path)
+    system_name = system_filename.split(sep='.')[0]
+    print(f'   - {system_name} ({cnt})')
+selection = int(input(f'Selected System: '))
+system_path = existing_systems[selection]
+
+#system_path = Path('data/systems/NewSystem.yaml')
+#system_path = Path('data/systems/HeatPumpMono.yaml')
 my_system = system.System(system_path)
 
 
@@ -171,17 +183,20 @@ while year <= 2045: # end year
 
     # simulate
     print(f'Year: {year}/45')
-    annual_building_results, annual_system_results, ecology_results, economy_results, comfort_deviation = simulate.calculate(year, me, my_building, my_system, my_scenario, annual_results.loc[year-1])
-    
+    annual_building_results, system_results, ecology_results, annual_economy_results, comfort_deviation = simulate.calculate(year, me, my_building, my_system, my_scenario)
+
+    annual_system_results = system_results.sum()
+    annual_ecology_results = ecology_results.sum()
+
     # calculate game log
-    game_log = gamelog.calculate(ecology_results, economy_results, comfort_deviation, annual_results.loc[year-1]) #ToDo add parameters
+    game_log = gamelog.calculate(annual_ecology_results, annual_economy_results, comfort_deviation, annual_results.loc[year-1]) #ToDo add parameters
 
     # append game_log dict to annual_results df  
     for key, value in game_log.items():
             annual_results.at[year, key] = value
     
     # append annual building/sytem/ecologic/economic results dicts to annual_results df
-    dicts = [annual_building_results, annual_system_results, ecology_results, economy_results, comfort_deviation]
+    dicts = [annual_building_results, annual_system_results, annual_ecology_results, annual_economy_results, comfort_deviation]
     for dict in dicts:
         if year == initial_year:
             annual_results = annual_results.join(pd.DataFrame([dict], index=[year]))
@@ -194,8 +209,8 @@ while year <= 2045: # end year
 
     # print rewards
     ''' Co2 emissions, Co2 budget; Annual costs, Bank deposite, '''
-    print(f"    CO2 emissions [t/a]  : {ecology_results['CO2 emissions [t]']:4.2f}", end=' ')
-    print(f"    Bank balance [Euro/a]: {economy_results['Balance [Euro/a]']:9.2f}", end=' ')
+    print(f"    CO2 emissions [t/a]  : {annual_ecology_results['CO2 emissions total [t]']:4.2f}", end=' ')
+    print(f"    Bank balance [Euro/a]: {annual_economy_results['Balance [Euro/a]']:9.2f}", end=' ')
     print(f"    Comfort deviation [degC]: {comfort_deviation['Comfort deviation [degC]']:9.2f}\n")
  
     # print gamelog
@@ -214,10 +229,10 @@ while year <= 2045: # end year
             for key, value in annual_system_results.items():
                 print(f"{key} : {value}")
         if user_input == '3':
-            for key, value in ecology_results.items():
+            for key, value in annual_ecology_results.items():
                 print(f"{key} : {value}")
         if user_input == '4':
-            for key, value in economy_results.items():
+            for key, value in annual_economy_results.items():
                 print(f"{key} : {value}")
 
     # start next year

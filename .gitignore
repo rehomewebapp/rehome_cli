@@ -4,5 +4,5 @@ __pycache__/*
 *.pyc
 !NewBuilding.yaml
 !NewUser.yaml
-!NewSystem.yaml
+!data/systems/*.yaml
 annual_results.csv

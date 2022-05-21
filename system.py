@@ -1,4 +1,5 @@
 import yaml
+import pandas as pd
 
 from utilities import calc_irradiance_on_tilted_plane
 
@@ -7,28 +8,64 @@ class System:
         # read system parameter file
         with open(system_path, "r") as stream:
             try:
-                components = yaml.safe_load(stream)
+                component_file = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
                 print(exc)
-        
-        # Add component instances as attributes
-        for component, params in components.items():
-            constructor =  globals()[component] # create reference to component class
-            setattr(self, component, constructor(params)) # add component instance as attribute to the systems
 
-    def calc(self, heat_demand, el_demand, weather):
+        self.components = {}
+        # Add component instances as attributes
+        for component, params in component_file.items():
+            #print(component)
+            constructor =  globals()[component] # create reference to component class
+            #setattr(self, component, constructor(params)) # add component instance as attribute to the systems
+            self.components[component] = constructor(params)
+
+    def calc_energy(self, heat_demand, el_demand, weather):
         ''' Calculate heat and electricity balances
         '''
         # heat balance
-        used_gas = self.GasBoiler.calc(heat_demand)
+        res = pd.DataFrame()
+
+        #used_gas = self.GasBoiler.calc(heat_demand)
+        for component in self.components:
+            res[self.components[component].energy] = self.components[component].calc_energy(heat_demand, el_demand, weather) # [Wh]
 
         # electricity balance
-        pv_production = self.Photovoltaic.calc(weather)
-        balance = el_demand - pv_production
-        el_feedin = balance.where(balance < 0, 0)
-        el_supply = balance.where(balance > 0, 0)
+        #pv_production = self.Photovoltaic.calc(weather)
+        #balance = el_demand - pv_production
+        #el_feedin = balance.where(balance < 0, 0)
+        #el_supply = balance.where(balance > 0, 0)
 
-        return {'Gas consumption [kwh/a]': used_gas.sum()/1000, 'Electricity PV feed-in [kWh/a]': el_feedin.sum()/1000, 'Electricity grid supply [kWh/a]': el_supply.sum()/1000}, used_gas, el_feedin, el_supply
+        return res
+        #return {'Gas consumption [kwh/a]': used_gas.sum()/1000, 'Electricity PV feed-in [kWh/a]': el_feedin.sum()/1000, 'Electricity grid supply [kWh/a]': el_supply.sum()/1000}, used_gas, el_feedin, el_supply
+    
+    def calc_emissions(self, year, scenario, system_results):
+        spec_co2_gas = scenario.eco2_path['spec_CO2_gas [g/kWh]'].at[year]
+        spec_co2_el = scenario.eco2_path['spec_CO2_el [g/kWh]'].at[year]
+        spec_co2 = {'gas' : spec_co2_gas, 'el' : spec_co2_el}
+
+        res = pd.DataFrame()
+        for component in self.components:
+            res[self.components[component].emission] = self.components[component].calc_emissions(system_results[self.components[component].energy], spec_co2) # [t]
+
+        res['CO2 emissions total [t]'] = res.sum(axis = 1) # total co2 emissions [tons]
+
+        return res 
+
+    def calc_energy_cost(self, year, scenario, system_results):
+        spec_cost_gas = scenario.eco2_path['cost_gas [ct/kWh]'].at[year]
+        spec_cost_el = scenario.eco2_path['cost_el_hh [ct/kWh]'].at[year]
+        pv_feedin_tariff = 6 # ct / kWh
+        spec_cost_energy = {'gas' : spec_cost_gas, 'el' : spec_cost_el, 'pv feed-in' : pv_feedin_tariff}
+
+        res = pd.DataFrame()
+        
+        for component in self.components:
+            res[self.components[component].cost] = self.components[component].calc_energy_cost(system_results[self.components[component].energy], spec_cost_energy) # [Euro]
+
+        res['Energy cost total [Euro]'] = res.sum(axis=1) # total energy costs [Euro]
+
+        return res
 
 class Component:
     def __init__(self, params, verbose = False):
@@ -40,16 +77,30 @@ class Component:
 class GasBoiler(Component):
     def __init__(self, params):
         Component.__init__(self, params)
+        self.energy = "GasBoiler Gas Consumption [Wh]"
+        self.emission = "GasBoiler CO2 emissions [t]"
+        self.cost = "GasBoiler Gas cost [Euro]"
 
-    def calc(self, heatdemand):
-        used_fuel = heatdemand * self.efficiency
+    def calc_energy(self, heat_demand, el_demand, weather):
+        used_fuel = heat_demand / self.efficiency
         return used_fuel
+
+    def calc_emissions(self, energy, spec_co2):
+        co2_emissions = energy * spec_co2['gas'] / 1e9   # [Wh]/1000 * [g/kWh]/1e6 = [tons]
+        return co2_emissions
+
+    def calc_energy_cost(self, energy, spec_cost):
+        energy_cost = energy/1000 * spec_cost['gas']/100 # [Wh]/1000 * [ct/kWh]/100 = [Euro]
+        return energy_cost
 
 class Photovoltaic(Component): 
     def __init__(self, params):
         Component.__init__(self, params)
+        self.energy = "PV El. Production [Wh]"
+        self.emission = "PV CO2 emissions [t]"
+        self.cost = "PV feed-in revenue [Euro]"
 
-    def calc(self, weather):
+    def calc_energy(self, heat_demand, el_demand, weather):
         ''' calculate PV power
         Parameters
         ----------
@@ -92,4 +143,16 @@ class Photovoltaic(Component):
         else:
             power = 0
         
-        return power
+        return power # W
+
+    def calc_emissions(self, energy, spec_co2):
+        co2_emissions = 0   # [Wh]/1000 * [g/kWh]/1e6 = [tons]
+        return co2_emissions
+
+    def calc_energy_cost(self, energy, spec_cost):
+        energy_cost = - energy/1000 * spec_cost['pv feed-in']/100 # [Wh]/1000 * [ct/kWh]/100 = [Euro]
+        return energy_cost
+
+class HeatPumpAir(Component):
+    def __init__(self, params):
+        Component.__init__(self, params)
