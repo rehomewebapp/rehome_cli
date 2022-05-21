@@ -8,7 +8,7 @@ import system
 def insulate(building, component, thickness):
     components = {'1' : 'facade', '2' : 'roof', '3' : 'upper_ceiling', '4' : 'groundplate'}
     old_u_value = getattr(building, f'u_value_{components[component]}')
-    new_u_value = 1 / (1 / old_u_value + thickness/10 /0.04) # [W/(m^2K)]
+    new_u_value = 1 / (1 / old_u_value + thickness/100 /0.04) # [W/(m^2K)]
     print(f"{components[component]} renovated: u-value {old_u_value:.2f} -> {new_u_value:.2f} W/(m^2K)")
     setattr(building, f"u_value_{components[component]}", new_u_value)
     #print(f"u_value_{components[component]} = {getattr(building, f'u_value_{components[component]}')}")
