@@ -131,7 +131,7 @@ year = initial_year+1 # start year
 while year <= 2045: # end year
     user_input = '0'
     while user_input != '':
-        user_input = input('Enter to Simulate next year; Renovate building (1); Change building parameters (2); Improve the System (3); Change User Behaviour (4): ')
+        user_input = input('Enter to Simulate next year; Renovate building (1); Improve the System (2); Change User Behaviour (3): ')
         if user_input == '1': # renovate building
             component_input = input("Select component: none (0), facade (1), roof (2), upper ceiling (3), groundplate (4), window (5): ")
             if component_input == '0': # none
@@ -145,12 +145,10 @@ while year <= 2045: # end year
                 actions.change_windows(my_building, window_type)
                 input("Press any key to continue")
                 
-        elif user_input == '2': # change bldg parameters
-            my_building = actions.edit_bldg_params(building_path)
-        elif user_input == '3': # change system parameters
+        elif user_input == '2': # change system parameters
             print("Let's improve the System Performance!")
             my_system = actions.optimize(system_path)
-        elif user_input == '4': # change user behaviour
+        elif user_input == '3': # change user behaviour
             print("Let's change the user behaviour!")
             me = actions.adopt(user_path)
 

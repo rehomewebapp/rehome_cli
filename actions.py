@@ -21,17 +21,6 @@ def change_windows(building, type):
     print(f"Windows exchanged: u-value {building.u_value_window:.2} -> {new_u_value} W/(m^2K)")
     building.u_value_window = new_u_value
 
-def edit_bldg_params(building_path):
-    # edit building parameters
-    subprocess.call(['nano', building_path])
-    # create new building after editing is done ...
-    # !ToDo we have to run some tests here to make sure the user did a valid renovation 
-    #      (e.g no geometry changed..., physical parameters within bounds ...)
-    # !ToDo calculate the costs for the renovation
-    new_building = building.Building(building_path)
-    print('Renovation done! - Please note that the expenses of your renovation are not yet considered. Everything for free :)')
-    return new_building
-
 def optimize(system_path):
     # add/delete new system or edit parameters
     subprocess.call(['nano', system_path])
