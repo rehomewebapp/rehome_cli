@@ -183,7 +183,7 @@ class Building:
             solar_gain = self.g_value_window * (1 - self.shading_window) * self.weather[f'G(v,{orientation}deg) [W/(m^2)'] * self.area_window/4 # [W]
             solar_gains =+ solar_gain # [W]
 
-        heatdemand = ventilation_losses + transmission_losses_facade + infiltration_losses - solar_gains # [W]
+        heatdemand = ventilation_losses + transmission_losses + infiltration_losses - solar_gains # [Wh] assuming hourly time steps
         
         annual_results = {'Annual heat demand [kWh/a]': heatdemand.sum()/1000,
                           'Transmission losses [kWh/a]': transmission_losses.sum()/1000,
