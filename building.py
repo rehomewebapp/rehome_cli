@@ -21,10 +21,7 @@ class Building:
 
         # load building parameters from file
         with open(building_path, "r") as stream:
-            try:
-                building_params = yaml.load(stream)
-            except yaml.YAMLError as exc:
-                print(exc)
+            building_params = yaml.load(stream)
         
         for key, value in building_params.items():
             if verbose == True:

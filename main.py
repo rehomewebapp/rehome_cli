@@ -54,10 +54,7 @@ if Path(user_path) == Path('data/users/NewUser.yaml'):
     shutil.copy(Path('data/users/NewUser.yaml'), new_user_path)
     # write user name to user config file
     with open(new_user_path, "r") as stream:
-        try:
-            user_file = yaml.load(stream)
-        except yaml.YAMLError as exc:
-            print(exc)
+        user_file = yaml.load(stream)
     user_file['name'] = user_name
     with open(new_user_path, 'w') as f:
         yaml.dump(user_file, f)
@@ -97,10 +94,7 @@ if Path(building_path) == Path('data/buildings/NewBuilding.yaml'):
     shutil.copy(Path('data/buildings/NewBuilding.yaml'), new_building_path)
     # write building name to user config file
     with open(new_building_path, "r") as stream:
-        try:
-            building_file = yaml.load(stream)
-        except yaml.YAMLError as exc:
-            print(exc)
+        building_file = yaml.load(stream)
     building_file['name'] = building_name
     with open(new_building_path, 'w') as f:
         yaml.dump(building_file, f)
