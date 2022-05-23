@@ -12,4 +12,5 @@ dependencies:
     - ruamel-yaml-clib==0.2.6
     - requests==2.27.1
     - pvlib==0.9.1
+    - cowsay==4.0
 

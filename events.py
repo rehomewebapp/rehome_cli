@@ -1,4 +1,7 @@
 import random
+import cowsay
+
+import utilities as util
 # These events can happen randomly during the obersvation period.
 
 # add new event (the function name) to this list to register it.
@@ -7,6 +10,7 @@ events = ['nothing', 'inherit', 'nothing', 'sarscov', 'nothing', 'saharaSand', '
           'nothing', 'promotion', 'nothing', 'fridge', 'nothing', 'gasBoilerAging', 
           'nothing', 'coldYear', 'nothing', 'homeOffice', 'nothing', 'sealingTape'] 
 
+#events = ['inherit']
 
 def nothing(year, user, building, system, event_states):
     # The nothing happens event corresonds to a very boring year
@@ -15,8 +19,9 @@ def nothing(year, user, building, system, event_states):
 def inherit(year, user, building, system, event_states):
     # This event adds money to your bank account
     heritage = random.randint(5,50) * user.monthly_sallary # [Euro] 
-    print(f"You inherit! Added {heritage} € to your bank account.")
     user.event_economic_balance += heritage
+    util.clear_console()
+    cowsay.cow(f"You inherit! Added {heritage} € to your bank account.")
 
 def sarscov(year, user, building, system, event_states):
     # This event increases the ventilation rate of your building
@@ -28,7 +33,7 @@ def sarscov(year, user, building, system, event_states):
         if year == event_states['sarscov']:
             building.ventilation_rate = building.ventilation_rate - delta_ventilation
             print(f"Yeey, the pandemic is over. Resetting ventilation rate back to {building.ventilation_rate:.2} 1/h.")
-            input('Press any key to continue.')
+            input('Press <Enter> to continue.')
             event_states.pop('sarscov', None) # remove event from event_states dictionary
 
         return
@@ -48,7 +53,7 @@ def saharaSand(year, user, building, system, event_states):
         if year == event_states['saharaSand']:
             system.components['Photovoltaic'].efficiency_param += delta_efficiency
             print(f"Your PV modules are clean again. Resetting efficiency back to {system.components['Photovoltaic'].efficiency_param}.")
-            input('Press any key to continue.')
+            input('Press <Enter> to continue.')
             event_states.pop('saharaSand', None) # remove event from event_states dictionary
         return
 
@@ -65,7 +70,7 @@ def unemployed(year, user, building, system, event_states):
         if year == event_states['unemployed']:
             user.monthly_sallary = user.monthly_sallary * (1 + benefit_rate)
             print(f"Congratulations! You found a new job. Your monthly sallary is {user.monthly_sallary} euro.")
-            input('Press any key to continue.')
+            input('Press <Enter> to continue.')
             event_states.pop('unemployed', None) # remove event from event_states dictionary
         return
 
@@ -104,7 +109,7 @@ def gasBoilerAging(year, user, building, system, event_states):
             system.components['GasBoiler'].efficiency += delta_efficiency
             user.event_economic_balance -=  cost # [Euro]
             print(f"A mechanic repairs your gas boiler for {cost} euro. Resetting efficiency back to {system.components['GasBoiler'].efficiency}.")
-            input('Press any key to continue.')
+            input('Press <Enter> to continue.')
             event_states.pop('gasBoilerAging', None) # remove event from event_states dictionary
         return
 
@@ -131,7 +136,7 @@ def coldYear(year, user, building, system, event_states):
             user.comfort_temperature = user.comfort_temperature - temp_amb_drop
             user.set_point_temperature = user.set_point_temperature - temp_amb_drop
             print(f"Ambient temperature back at normal level.")
-            input('Press any key to continue.')
+            input('Press <Enter> to continue.')
             event_states.pop('coldYear', None) # remove event from event_states dictionary
         return
 
@@ -152,7 +157,7 @@ def homeOffice(year, user, building, system, event_states):
             user.set_point_temperature = user.set_point_temperature - delta_temp
             user.annual_el_demand = user.annual_el_demand - delta_el
             print(f"Back to office. Annual electricity demand and set point temperature back to {user.annual_el_demand} kWh and {user.comfort_temperature} degC.")
-            input('Press any key to continue.')
+            input('Press <Enter> to continue.')
             event_states.pop('homeOffice', None) # remove event from event_states dictionary
         return
     
