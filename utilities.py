@@ -1,5 +1,6 @@
 import ntpath
 import json
+import subprocess
 from pathlib import Path
 
 import requests
@@ -83,3 +84,7 @@ def calc_irradiance_on_tilted_plane(weather, tilt_angle, azimuth_angle):
                                                         dhi = weather['Gd(h) [W/m^2]'])
     irradiance_tilted = irradiance_df['poa_global']
     return irradiance_tilted
+
+# USER INTERFACE
+# https://stackoverflow.com/questions/517970/how-to-clear-the-interpreter-console
+clear_console = lambda: subprocess.call('cls||clear', shell=True)

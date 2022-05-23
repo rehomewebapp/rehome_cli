@@ -4,7 +4,6 @@ import glob       # used to find available parameter files
 import shutil     # used to create copies of the default parameter files
 import subprocess # used to run the nano texteditor to edit config files from the cmd prompt
 from pathlib import Path
-from unittest import result
 
 # these modules have to be installed (e.g. with pip)
 import numpy as np
@@ -13,7 +12,7 @@ from ruamel.yaml import YAML # this version of pyyaml support dumping without lo
 yaml = YAML()
 
 # modules you find in this directory
-import utilities
+import utilities as util
 import user
 import building
 import system
@@ -23,31 +22,34 @@ import simulate
 import scenario
 import gamelog
 
+util.clear_console()
+
 # intro
 print("Welcome to REhome!")
-print("Try to reach the climate goals without going bankrupt or violating your comfort zone!")
+print("    Try to reach the climate goals without going bankrupt or violating your comfort zone!")
 
 # choose scenario
-print("Choose the cost and emission scenario:")
+#print("Choose the cost and emission scenario:")
 my_scenario = scenario.Eco2("data/eco2_paths/Scenario.csv")
-print("    - Default scenario (moderate increase of CO2 pricing) ")
+#print("    - Default scenario (moderate increase of CO2 pricing) ")
 #print(my_scenario.eco2_path.head())
-
+selection = input(f"\n'Enter' to continue: ")
+util.clear_console()
 # initalize results dataframe
 initial_year = 2021
 annual_results = pd.DataFrame(index = my_scenario.eco2_path.index)
 
 # choose user
-print("Choose your character:")
+print("Choose a character or create a new one (0): ")
 existing_users = glob.glob('data/users/*.yaml')
 for cnt, user_path in enumerate(existing_users):
-    user_filename = utilities.path_leaf(user_path) # we only need the filename, not the filepath
+    user_filename = util.path_leaf(user_path) # we only need the filename, not the filepath
     user_name = user_filename.split(sep='.')[0] # get rid of the extension
-    print(f'    - {user_name} ({cnt})')
-selection = int(input(f'Selected Character: '))
-user_path = existing_users[selection]
+    print(f"    - {user_name} '{cnt+1}'")
+selection = int(input(f''))
+
 # if the user wants to create a new character ...
-if Path(user_path) == Path('data/users/NewUser.yaml'):
+if selection == 0:
     user_name = input("Give your new character a name: ")
     new_user_path = Path(f'data/users/{user_name}.yaml')
     # create a copy of the default user
@@ -62,11 +64,13 @@ if Path(user_path) == Path('data/users/NewUser.yaml'):
     subprocess.call(['nano', new_user_path])
     user_path = new_user_path
 else:
+    user_path = existing_users[selection-1]
     #print(f"Loading user from {user_path}")
     pass
 
 # create the user from the selected config file path
 me = user.User(user_path)
+util.clear_console()
 print(f"Hello {me.name} :).", end = ' ')
 
 # initalize user columns in results df
@@ -76,18 +80,19 @@ annual_results.at[initial_year, 'Bank Deposit [Euro]'] = me.bank_deposit
 annual_results.at[initial_year, 'Comfort'] = " =) =) =)"
 
 # Let's choose a building config in a simmilar manner
-print('Please choose one of the following buildings:')
+util.clear_console()
+print('Please choose one of the following buildings, or create your own (0):')
 existing_buildings = glob.glob('data/buildings/*.yaml')
 # print all available options
 for cnt, building_path in enumerate(existing_buildings):
     # only print the filename, not the path
-    building_filename = utilities.path_leaf(building_path)
+    building_filename = util.path_leaf(building_path)
     building_name = building_filename.split(sep='.')[0]
-    print(f'   - {building_name} ({cnt})')
-selection = int(input(f'Selected Building: '))
-building_path = existing_buildings[selection]
+    print(f'   - {building_name} ({cnt+1})')
+selection = int(input(''))
+building_path = existing_buildings[selection-1]
 # if the user wants to create a new building ...
-if Path(building_path) == Path('data/buildings/NewBuilding.yaml'):
+if selection == 0:
     building_name = input("Give your new building a name: ")
     new_building_path = Path(f'data/buildings/{building_name}.yaml')
     # create a copy of the default building
@@ -123,6 +128,7 @@ year = initial_year+1 # start year
 while year <= 2045: # end year
     user_input = '0'
     while user_input != '':
+        util.clear_console()
         user_input = input('Enter to Simulate next year; Renovate building (1); Improve the System (2); Change User Behaviour (3): ')
         if user_input == '1': # renovate building
             component_input = input("Select component: none (0), facade (1), roof (2), upper ceiling (3), groundplate (4), window (5): ")
@@ -168,10 +174,9 @@ while year <= 2045: # end year
         event_status = getattr(events, event)(year, me, my_building, my_system, event_states)
 
     if event != 'nothing':
-        input('Press any key to continue.')
+        input("Press <Enter> to continue: ")
 
     # simulate
-    print(f'Year: {year}/45')
     annual_building_results, system_results, ecology_results, annual_economy_results, comfort_deviation = simulate.calculate(year, me, my_building, my_system, my_scenario)
 
     annual_system_results = system_results.sum()
@@ -197,10 +202,12 @@ while year <= 2045: # end year
     annual_results.to_csv('annual_results.csv')
 
     # print rewards
+    util.clear_console()
+    print(f'Year: {year}/45')
     ''' Co2 emissions, Co2 budget; Annual costs, Bank deposite, '''
     print(f"    CO2 emissions [t/a]  : {annual_ecology_results['CO2 emissions total [t]']:4.2f}", end=' ')
     print(f"    Bank balance [Euro/a]: {annual_economy_results['Balance [Euro/a]']:9.2f}", end=' ')
-    print(f"    Comfort deviation [degC]: {comfort_deviation['Comfort deviation [degC]']:9.2f}\n")
+    print(f"    Comfort deviation [degC]: {comfort_deviation['Comfort deviation [degC]']:9.2f}")
  
     # print gamelog
     print(f"    CO2 budget [t]       : {game_log['CO2 Budget [t]']:4.2f}", end=' ')
@@ -210,19 +217,31 @@ while year <= 2045: # end year
     # print detailed results
     user_input = '0'
     while user_input != '':
-        user_input = input('Enter to continue; Show building results (1); Show system results (2); Show ecologic results (3); Show economic results (4) : ')
-        if user_input == '1':
+        
+        #print("Building results '1'; System results '2'; Ecologic results '3'; Economic results '4' : ")
+        if user_input == '1': 
+            util.clear_console()
+            print('Detailed Building Results:')
             for key, value in annual_building_results.items():
-                print(f"{key} : {value}")
+                print(f"    {key.split('[')[0]: <30} : {value:>15.2f} [{key.split('[')[1]: <6}") # seperate key into 'name' and 'unit', align output with <^>, edit precision with .2f
+            #user_input = input('Enter to continue; Show building results (1); Show system results (2); Show ecologic results (3); Show economic results (4) : ')
         if user_input == '2':
+            util.clear_console()
+            print('Detailed System Results:')
             for key, value in annual_system_results.items():
-                print(f"{key} : {value}")
+                print(f"    {key.split('[')[0]: <30} : {value/1000:>15.2f} [k{key.split('[')[1]: <6}")
         if user_input == '3':
+            util.clear_console()
+            print('Detailed Ecology Results:')            
             for key, value in annual_ecology_results.items():
-                print(f"{key} : {value}")
+                print(f"    {key.split('[')[0]: <30} : {value:>15.2f} [{key.split('[')[1]: <6}")
         if user_input == '4':
+            util.clear_console()      
+            print('Detailed Economy Results:')
             for key, value in annual_economy_results.items():
-                print(f"{key} : {value}")
+                print(f"    {key.split('[')[0]: <30} : {value:>15.2f} [{key.split('[')[1]: <6}")
+        print("\nBuilding results '1'; System results '2'; Ecologic results '3'; Economic results '4' : ")  
+        user_input = input('Press <Enter> to continue: ')
 
     # start next year
     year = year + 1

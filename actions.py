@@ -3,7 +3,7 @@ import glob       # used to find available parameter files
 import pandas as pd
 
 import user
-import utilities
+import utilities as util
 import building
 import system
 
@@ -24,15 +24,16 @@ def change_windows(building, type):
     building.u_value_window = new_u_value
 
 def choose_system():
+    util.clear_console()
     print('Please choose one of the following system configurations:')
     existing_systems = glob.glob('data/systems/*.yaml')
     # print all available options
     for cnt, system_path in enumerate(existing_systems):
         # only print the filename, not the path
-        system_filename = utilities.path_leaf(system_path)
+        system_filename = util.path_leaf(system_path)
         system_name = system_filename.split(sep='.')[0]
         print(f'   - {system_name} ({cnt})')
-    selection = int(input(f'Selected System: '))
+    selection = int(input(''))
     system_path = existing_systems[selection]
 
     my_system = system.System(system_path)
