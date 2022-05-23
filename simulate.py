@@ -21,13 +21,15 @@ def calculate(year, user, building, system, scenario):
 
     annual_economy_results = energy_costs.sum() # [Euro]
     annual_economy_results["Event balance [Euro/a]"] = user.event_economic_balance
+    annual_economy_results["Investment cost [Euro/a]"] = user.action_economic_balance
 
     # annual revenues and expenses
     annual_economy_results['Revenues [Euro/a]'], annual_economy_results['Expenses [Euro/a]'] = user.calc_economy() # [Euro]
 
     # calculate economic balance
-    annual_economy_results["Balance [Euro/a]"] = annual_economy_results['Revenues [Euro/a]'] - annual_economy_results['Expenses [Euro/a]'] - energy_costs.sum().sum() + user.event_economic_balance
+    annual_economy_results["Balance [Euro/a]"] = annual_economy_results['Revenues [Euro/a]'] - annual_economy_results['Expenses [Euro/a]'] - energy_costs.sum().sum() + user.event_economic_balance - user.action_economic_balance
     user.event_economic_balance = 0
+    user.action_cost = 0
 
     # COMFORT
     comfort_deviation = {"Comfort deviation [degC]" : user.comfort_temperature - user.set_point_temperature}    # [degC]

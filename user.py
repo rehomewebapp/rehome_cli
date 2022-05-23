@@ -19,6 +19,7 @@ class User:
 
         self.profile = self.generate_profiles()
         self.event_economic_balance = 0
+        self.action_economic_balance = 0
         self.bank_deposit = self.initial_bank_deposit
 
     def generate_profiles(self):

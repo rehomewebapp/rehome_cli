@@ -70,6 +70,20 @@ class System:
 
         return res
 
+
+    def calc_investment_cost(self):
+        invest = {}
+        
+        for component in self.components:
+            invest[self.components[component].invest] = self.components[component].calc_investment_cost() # [Euro]
+
+        sum = 0
+        for value in invest.values():
+            sum += value
+        invest['Investment cost total [Euro]'] = sum # total investment costs [Euro]
+
+        return invest
+
 class Component:
     def __init__(self, params, verbose = False):
         for key, value in params.items():
@@ -83,6 +97,7 @@ class GasBoiler(Component):
         self.energy = "GasBoiler Gas Consumption [Wh]"
         self.emission = "GasBoiler CO2 emissions [t]"
         self.cost = "GasBoiler Gas cost [Euro]"
+        self.invest = "GasBoiler Invest [Euro]"
 
     def calc_energy(self, heat_demand, el_demand, weather):
         used_fuel = heat_demand / self.efficiency
@@ -96,12 +111,18 @@ class GasBoiler(Component):
         energy_cost = energy/1000 * spec_cost['gas']/100 # [Wh]/1000 * [ct/kWh]/100 = [Euro]
         return energy_cost
 
+    def calc_investment_cost(self):
+        cost = 0 # ToDo add calculation and power_nom
+        return cost
+    
+
 class Photovoltaic(Component): 
     def __init__(self, params):
         Component.__init__(self, params)
         self.energy = "PV El. Production [Wh]"
         self.emission = "PV CO2 emissions [t]"
         self.cost = "PV feed-in revenue [Euro]"
+        self.invest = "PV Invest [Euro]"
 
     def calc_energy(self, heat_demand, el_demand, weather):
         ''' calculate PV power
@@ -155,13 +176,18 @@ class Photovoltaic(Component):
     def calc_energy_cost(self, energy, spec_cost):
         energy_cost = - energy/1000 * spec_cost['pv feed-in']/100 # [Wh]/1000 * [ct/kWh]/100 = [Euro]
         return energy_cost
+    
+    def calc_investment_cost(self):
+        cost = self.power_nom * self.cost_value_a * math.pow(self.power_nom, self.cost_value_b)
+        return cost
 
 class HeatPumpAir(Component):
     def __init__(self, params):
         Component.__init__(self, params)
-        self.energy = "HeatPump El. Consumption [Wh]"
-        self.emission = "HeatPump CO2 emissions [t]"
-        self.cost = "HeatPump El. cost [Euro]"
+        self.energy = "HeatPumpAir El. Consumption [Wh]"
+        self.emission = "HeatPumpAir CO2 emissions [t]"
+        self.cost = "HeatPumpAir El. cost [Euro]"
+        self.invest = "HeatPumpAir Invest [Euro]"
 
     def calc_energy(self, heat_demand, el_demand, weather):
         # calculate sink temperature with heating curve
@@ -201,3 +227,7 @@ class HeatPumpAir(Component):
     def calc_energy_cost(self, energy, spec_cost):
         energy_cost = energy/1000 * spec_cost['el hp']/100 # [Wh]/1000 * [ct/kWh]/100 = [Euro]
         return energy_cost
+
+    def calc_investment_cost(self):
+        cost = self.power_nom * self.cost_value_a * math.pow(self.power_nom, self.cost_value_b)
+        return cost

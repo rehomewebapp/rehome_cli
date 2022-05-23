@@ -143,6 +143,9 @@ while year <= 2045: # end year
                 pass
             elif system_input == '1': # change system
                 my_system, system_path = actions.choose_system()
+                investment_cost = my_system.calc_investment_cost()
+                #print(investment_cost)
+                me.action_economic_balance += investment_cost['Investment cost total [Euro]']
             elif system_input == '2': # edit system
                 print("Let's improve the System Performance!")
                 my_system = actions.optimize(system_path)
