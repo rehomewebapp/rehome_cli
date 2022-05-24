@@ -109,8 +109,25 @@ class GasBoiler(Component):
         self.invest = "GasBoiler Invest [Euro]"
 
     def calc_energy(self, heat_demand, el_demand, weather):
-        used_fuel = heat_demand / self.efficiency
-        return used_fuel
+
+        #calculate thermal power of the gas boiler
+        if isinstance(heat_demand, pd.Series):
+            power_th = heat_demand.clip(upper = self.power_nom * 1000)
+            if heat_demand.max()/1000 > self.power_nom:
+                uncovered_heat = heat_demand - power_th # W
+                input(f'Heating load can not be covered by the Gas Boiler! Uncovered heat: {uncovered_heat.sum()/1000:.2f} kWh/a')
+            
+        else:
+            if heat_demand/1000 < self.power_nom: #if the heating load can be covered
+                power_th = heat_demand #heat delivered by the gas boiler equals the heating load
+            else: #if the heating load is bigger than the max gas boiler power
+                power_th = self.power_nom * 1000 #heat delivered by the gas boiler is max boiler power
+                uncovered_heat = heat_demand - power_th # W
+                input(f'Heating load can not be covered by the Gas Boiler! Uncovered heat: {uncovered_heat/1000:.2f} kW')
+
+        used_gas = power_th / self.efficiency # [W] assuming hourly time steps
+
+        return used_gas
 
     def calc_emissions(self, energy, spec_co2):
         co2_emissions = energy * spec_co2['gas'] / 1e9   # [Wh]/1000 * [g/kWh]/1e6 = [tons]
