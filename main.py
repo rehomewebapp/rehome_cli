@@ -117,7 +117,21 @@ my_building = building.Building(building_path, verbose = False)
 
 
 # choose system configuration
-my_system, system_path = actions.choose_system(c.START_YEAR)
+print("Please choose one of the following systems, or create your own (0):")
+existing_systems = glob.glob('data/systems/configured/*.yaml')
+# print all available options
+for cnt, system_path in enumerate(existing_systems):
+    # only print the filename, not the path
+    system_filename = util.path_leaf(system_path)
+    system_name = system_filename.split(sep='.')[0]
+    print(f'   - {system_name} ({cnt+1})')
+selection = int(input(''))
+system_path = existing_systems[selection-1]
+
+if selection == 0:
+    system_path = actions.configure_system(c.START_YEAR-1, me.name)
+
+my_system = system.System(system_path)
 
 annual_results.to_csv('annual_results.csv')
 
@@ -149,7 +163,8 @@ while year <= c.END_YEAR: # end year
             if system_input == '0': # return
                 pass
             elif system_input == '1': # change system
-                my_system, system_path = actions.choose_system(year)
+                system_path = actions.configure_system(year, me.name)
+                my_system = system.System(system_path)
                 investment_cost = my_system.calc_investment_cost()
 
                 me.action_economic_balance += investment_cost['Investment cost total [Euro]']

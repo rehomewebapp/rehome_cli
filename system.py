@@ -60,9 +60,9 @@ class System:
         spec_cost_el_hh = scenario.eco2_path['cost_el_hh [ct/kWh]'].at[year]
         spec_cost_el_hp = scenario.eco2_path['cost_el_hp [ct/kWh]'].at[year]
         if 'Photovoltaic' in self.components:
-            pv_feedin_tariff = self.components['Photovoltaic'].feedin_tariff.at[year] # [ct/kWh]
+            pv_feedin_tariff = self.components['Photovoltaic'].feedin_tariffs.at[year] # [ct/kWh]
             if pv_feedin_tariff == 0:
-                print(f"The feed-in tariff payment period of your PV system is expired: {self.components['Photovoltaic'].feedin_tariff.at[year-1]:.2f} ct/kWh -> {self.components['Photovoltaic'].feedin_tariff.at[year]:.2f} ct/kWh\n")
+                print(f"The feed-in tariff payment period of your PV system is expired: {self.components['Photovoltaic'].feedin_tariffs.at[year-1]:.2f} ct/kWh -> {self.components['Photovoltaic'].feedin_tariffs.at[year]:.2f} ct/kWh\n")
         else:
             pv_feedin_tariff = 0
         
@@ -132,19 +132,16 @@ class Photovoltaic(Component):
         self.emission = "PV CO2 emissions [t]"
         self.cost = "PV feed-in revenue [Euro]"
         self.invest = "PV Invest [Euro]"
-        self.feedin_tariff = self.calc_feedin_tariff(self.construction_year)
+        if self.construction_year >= c.START_YEAR:
+            self.feedin_tariff = self.calc_feedin_tariff()
+        self.feedin_tariffs = self.set_feedin_tariffs()
 
-    def calc_feedin_tariff(self, construction_year):
-        ''' Calculate the constant feed-in tariff for the PV System based on its year of construction,
-        valid for 20 years.
-        Parameters
-        ----------
-        construction_year: int
-            year of construction of the PV system
+    def calc_feedin_tariff(self):
+        ''' Calculate the constant feed-in tariff for the PV System based on its year of construction.
         Returns
         -------
-        pd.Series
-            feed-in tariff for PV system in the game period 2022-2045
+        float
+            feed-in tariff [ct/kWh]
         '''
         # PV feed-in tariff for installation in Jan 2022 
         # https://www.photovoltaik4all.de/aktuelle-eeg-verguetungssaetze-fuer-photovoltaikanlagen-2017
@@ -153,15 +150,27 @@ class Photovoltaic(Component):
         # monthly basic degression of feed-in tariff, stated in EEG 2021, value adopted every quarter depending on PV installaton rate
         # https://www.solaranlagen-portal.com/photovoltaik-grossanlage/wirtschaftlichkeit/degression-einspeiseverguetung
         degression_rate = 0.4 # [%] monthly
-        duration = 20 # [a] validity of feedin tariff
         
-        n_months = (construction_year - ref_year) * 12 # number of months passed since reference year Jan 2022
-        feedin_tariff_year = feedin_tariff_ref * math.pow(1 - degression_rate/100, n_months) # [ct/kWh]
-        index = np.linspace(c.START_YEAR, c.END_YEAR, c.END_YEAR-c.START_YEAR+1)
-        feedin_tariff = pd.Series(0, index) # initialize series with zeros
-        feedin_tariff.loc[construction_year : construction_year + duration] = feedin_tariff_year
+        n_months = (self.construction_year - ref_year) * 12 # number of months passed since reference year Jan 2022
+        feedin_tariff = feedin_tariff_ref * math.pow(1 - degression_rate/100, n_months) # [ct/kWh]
         
         return feedin_tariff
+
+    def set_feedin_tariffs(self):
+        ''' Set feedin-tariff for a duration of 20 years.
+        Returns
+        -------
+        pd.Series
+            feed-in tariff for PV system in the game period 2022-2045
+        '''
+        duration = 20 # [a] validity of feedin tariff
+        index = np.linspace(c.START_YEAR, c.END_YEAR, c.END_YEAR-c.START_YEAR+1)
+        feedin_tariffs = pd.Series(0, index) # initialize series with zeros
+        start_feedin = max(self.construction_year, c.START_YEAR)
+        feedin_tariffs.loc[start_feedin : self.construction_year + duration] = self.feedin_tariff
+        #print(feedin_tariffs)
+        return feedin_tariffs
+
 
 
     def calc_energy(self, heat_demand, el_demand, weather):
