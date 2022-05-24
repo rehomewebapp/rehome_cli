@@ -33,7 +33,7 @@ print("    Try to reach the climate goals without going bankrupt or violating yo
 my_scenario = scenario.Eco2("data/eco2_paths/Scenario.csv")
 #print("    - Default scenario (moderate increase of CO2 pricing) ")
 #print(my_scenario.eco2_path.head())
-selection = input(f"\n'Enter' to continue: ")
+selection = input(f"\nENTER to continue: ")
 util.clear_console()
 # initalize results dataframe
 initial_year = 2021
@@ -129,7 +129,7 @@ while year <= 2045: # end year
     user_input = '0'
     while user_input != '':
         util.clear_console()
-        user_input = input('Enter to Simulate next year; Renovate building (1); Improve the System (2); Change User Behaviour (3): ')
+        user_input = input('ENTER to Simulate next year; Renovate building (1); Improve the System (2); Change User Behaviour (3): ')
         if user_input == '1': # renovate building
             component_input = input("Select component: none (0), facade (1), roof (2), upper ceiling (3), groundplate (4), window (5): ")
             if component_input == '0': # none
@@ -137,11 +137,11 @@ while year <= 2045: # end year
             elif int(component_input) < 5:
                 thickness_insulation = int(input("Additional insulation thickness [cm]: "))
                 actions.insulate(my_building, component_input, thickness_insulation)
-                input("Press any key to continue")
+                input("ENTER to continue")
             elif component_input == '5': # window
                 window_type = input("Select new window type: wood double-glazed (1), plastic insulating glass (2), alu/steel insulating glass (3): ")
                 actions.change_windows(my_building, window_type)
-                input("Press any key to continue")
+                input("ENTER to continue")
                 
         elif user_input == '2': # change system parameters
             system_input = input("Return (0), Change system (1), Improve current system (2): ")
@@ -174,7 +174,7 @@ while year <= 2045: # end year
         event_status = getattr(events, event)(year, me, my_building, my_system, event_states)
 
     if event != 'nothing':
-        input("Press <Enter> to continue: ")
+        input("ENTER to continue: ")
 
     # simulate
     annual_building_results, system_results, ecology_results, annual_economy_results, comfort_deviation = simulate.calculate(year, me, my_building, my_system, my_scenario)
@@ -218,13 +218,13 @@ while year <= 2045: # end year
     user_input = '0'
     while user_input != '':
         
-        #print("Building results '1'; System results '2'; Ecologic results '3'; Economic results '4' : ")
+        #print("Building results (1); System results (2); Ecologic results (3); Economic results (4) : ")
         if user_input == '1': 
             util.clear_console()
             print('Detailed Building Results:')
             for key, value in annual_building_results.items():
                 print(f"    {key.split('[')[0]: <30} : {value:>15.2f} [{key.split('[')[1]: <6}") # seperate key into 'name' and 'unit', align output with <^>, edit precision with .2f
-            #user_input = input('Enter to continue; Show building results (1); Show system results (2); Show ecologic results (3); Show economic results (4) : ')
+            #user_input = input('ENTER to continue; Show building results (1); Show system results (2); Show ecologic results (3); Show economic results (4) : ')
         if user_input == '2':
             util.clear_console()
             print('Detailed System Results:')
@@ -240,8 +240,8 @@ while year <= 2045: # end year
             print('Detailed Economy Results:')
             for key, value in annual_economy_results.items():
                 print(f"    {key.split('[')[0]: <30} : {value:>15.2f} [{key.split('[')[1]: <6}")
-        print("\nBuilding results '1'; System results '2'; Ecologic results '3'; Economic results '4' : ")  
-        user_input = input('Press <Enter> to continue: ')
+        print("\nBuilding results (1); System results (2); Ecologic results (3); Economic results (4) : ")  
+        user_input = input('ENTER to continue: ')
 
     # start next year
     year = year + 1
