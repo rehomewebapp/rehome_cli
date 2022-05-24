@@ -44,7 +44,7 @@ def configure_system(year, user, building):
         new file path for the configured system yaml-file
     '''
     util.clear_console()
-    # chosse heat generation system
+    # choose heat generation system
     heat_input = input("Please choose your heat generation system: GasBoiler (1), HeatPumpAir (2) : ")
     if heat_input == '1':
         heat_selection = 'GasBoiler'
