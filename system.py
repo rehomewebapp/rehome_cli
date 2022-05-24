@@ -59,7 +59,12 @@ class System:
         spec_cost_gas = scenario.eco2_path['cost_gas [ct/kWh]'].at[year]
         spec_cost_el_hh = scenario.eco2_path['cost_el_hh [ct/kWh]'].at[year]
         spec_cost_el_hp = scenario.eco2_path['cost_el_hp [ct/kWh]'].at[year]
-        pv_feedin_tariff = self.calc_feedin_tariff(year) # [ct/kWh]
+        if 'Photovoltaic' in self.components:
+            pv_feedin_tariff = self.components['Photovoltaic'].feedin_tariff.at[year] # [ct/kWh]
+            if pv_feedin_tariff == 0:
+                print(f"The feed-in tariff payment period of your PV system is expired: {self.components['Photovoltaic'].feedin_tariff.at[year-1]:.2f} ct/kWh -> {self.components['Photovoltaic'].feedin_tariff.at[year]:.2f} ct/kWh\n")
+        else:
+            pv_feedin_tariff = 0
         
         spec_cost_energy = {'gas' : spec_cost_gas, 'el hh' : spec_cost_el_hh, 'el hp' : spec_cost_el_hp, 'pv feed-in' : pv_feedin_tariff}
 
@@ -86,17 +91,7 @@ class System:
 
         return invest
 
-    def calc_feedin_tariff(self, year):
-        # PV feed-in tariff for installation in Jan 2022 
-        # https://www.photovoltaik4all.de/aktuelle-eeg-verguetungssaetze-fuer-photovoltaikanlagen-2017
-        feedin_tariff_ref = 6.83 # [ct/kWh]
-        ref_year = 2022
-        # monthly basic degression of feed-in tariff, stated in EEG 2021, value adopted every quarter depending on PV installaton rate
-        # https://www.solaranlagen-portal.com/photovoltaik-grossanlage/wirtschaftlichkeit/degression-einspeiseverguetung
-        degression_rate = 0.4 # [%] monthly
-        n_months = (year - ref_year) * 12 # number of months passed since reference year Jan 2022
-        feedin_tariff_year = feedin_tariff_ref * math.pow(1 - degression_rate/100, n_months)
-        return feedin_tariff_year
+
 
 class Component:
     def __init__(self, params, verbose = False):
@@ -137,6 +132,37 @@ class Photovoltaic(Component):
         self.emission = "PV CO2 emissions [t]"
         self.cost = "PV feed-in revenue [Euro]"
         self.invest = "PV Invest [Euro]"
+        self.feedin_tariff = self.calc_feedin_tariff(self.construction_year)
+
+    def calc_feedin_tariff(self, construction_year):
+        ''' Calculate the constant feed-in tariff for the PV System based on its year of construction,
+        valid for 20 years.
+        Parameters
+        ----------
+        construction_year: int
+            year of construction of the PV system
+        Returns
+        -------
+        pd.Series
+            feed-in tariff for PV system in the game period 2022-2045
+        '''
+        # PV feed-in tariff for installation in Jan 2022 
+        # https://www.photovoltaik4all.de/aktuelle-eeg-verguetungssaetze-fuer-photovoltaikanlagen-2017
+        feedin_tariff_ref = 6.83 # [ct/kWh]
+        ref_year = 2022
+        # monthly basic degression of feed-in tariff, stated in EEG 2021, value adopted every quarter depending on PV installaton rate
+        # https://www.solaranlagen-portal.com/photovoltaik-grossanlage/wirtschaftlichkeit/degression-einspeiseverguetung
+        degression_rate = 0.4 # [%] monthly
+        duration = 20 # [a] validity of feedin tariff
+        
+        n_months = (construction_year - ref_year) * 12 # number of months passed since reference year Jan 2022
+        feedin_tariff_year = feedin_tariff_ref * math.pow(1 - degression_rate/100, n_months) # [ct/kWh]
+        index = np.linspace(c.START_YEAR, c.END_YEAR, c.END_YEAR-c.START_YEAR+1)
+        feedin_tariff = pd.Series(0, index) # initialize series with zeros
+        feedin_tariff.loc[construction_year : construction_year + duration] = feedin_tariff_year
+        
+        return feedin_tariff
+
 
     def calc_energy(self, heat_demand, el_demand, weather):
         ''' calculate PV power

@@ -23,7 +23,7 @@ def change_windows(building, type):
     print(f"Windows exchanged: u-value {building.u_value_window:.2} -> {new_u_value} W/(m^2K)")
     building.u_value_window = new_u_value
 
-def choose_system():
+def choose_system(year):
     util.clear_console()
     print('Please choose one of the following system configurations:')
     existing_systems = glob.glob('data/systems/*.yaml')
@@ -35,8 +35,18 @@ def choose_system():
         print(f'   - {system_name} ({cnt})')
     selection = int(input(''))
     system_path = existing_systems[selection]
+    print(system_path)
 
     my_system = system.System(system_path)
+
+    # ToDo write to more suitable place
+    # Set construction year and feed-in tariff of PV system
+    if system_path == 'data/systems\GasBoiler_PV.yaml':
+        my_system.components['Photovoltaic'].construction_year = year
+        #print(f'construction year set to {year}')
+        my_system.components['Photovoltaic'].feedin_tariff = my_system.components['Photovoltaic'].calc_feedin_tariff(year)
+        print(f"System installed with a PV feed-in tariff of {my_system.components['Photovoltaic'].feedin_tariff.at[year]:.2f} ct/kWh for 20 years.")
+
     return my_system, system_path
 
 def optimize(system_path):
