@@ -58,7 +58,8 @@ class System:
         spec_cost_gas = scenario.eco2_path['cost_gas [ct/kWh]'].at[year]
         spec_cost_el_hh = scenario.eco2_path['cost_el_hh [ct/kWh]'].at[year]
         spec_cost_el_hp = scenario.eco2_path['cost_el_hp [ct/kWh]'].at[year]
-        pv_feedin_tariff = 6 # ct / kWh
+        pv_feedin_tariff = self.calc_feedin_tariff(year) # [ct/kWh]
+        
         spec_cost_energy = {'gas' : spec_cost_gas, 'el hh' : spec_cost_el_hh, 'el hp' : spec_cost_el_hp, 'pv feed-in' : pv_feedin_tariff}
 
         res = pd.DataFrame()
@@ -83,6 +84,18 @@ class System:
         invest['Investment cost total [Euro]'] = sum # total investment costs [Euro]
 
         return invest
+
+    def calc_feedin_tariff(self, year):
+        # PV feed-in tariff for installation in Jan 2022 
+        # https://www.photovoltaik4all.de/aktuelle-eeg-verguetungssaetze-fuer-photovoltaikanlagen-2017
+        feedin_tariff_ref = 6.83 # [ct/kWh]
+        ref_year = 2022
+        # monthly basic degression of feed-in tariff, stated in EEG 2021, value adopted every quarter depending on PV installaton rate
+        # https://www.solaranlagen-portal.com/photovoltaik-grossanlage/wirtschaftlichkeit/degression-einspeiseverguetung
+        degression_rate = 0.4 # [%] monthly
+        n_months = (year - ref_year) * 12 # number of months passed since reference year Jan 2022
+        feedin_tariff_year = feedin_tariff_ref * math.pow(1 - degression_rate/100, n_months)
+        return feedin_tariff_year
 
 class Component:
     def __init__(self, params, verbose = False):
