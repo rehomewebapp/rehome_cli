@@ -85,7 +85,7 @@ def promotion(year, user, building, system, event_states):
     # check if user is not unemployed in the simulated year
     if 'unemployed' not in event_states:
         promotion_factor = 1 + random.randint(5,25)/100
-        print(f"Congratulations! You've been promoted. Your new monthly sallary increased from {user.monthly_sallary} euro to {user.monthly_sallary * promotion_factor} euro.")
+        print(f"Congratulations! You've been promoted. Your new monthly sallary increased from {user.monthly_sallary:.2f} euro to {user.monthly_sallary * promotion_factor:.2f} euro.")
         user.monthly_sallary = user.monthly_sallary * promotion_factor
 
 def fridge(year, user, building, system, event_states):
