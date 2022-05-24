@@ -115,6 +115,11 @@ else:
 # create a instance of your building
 my_building = building.Building(building_path, verbose = False)
 
+# calculate maximum heat load of the building
+annual_building_results, hourly_heat_demand = my_building.calc(me)
+heat_load_max = hourly_heat_demand.max()
+my_building.heat_load_max = heat_load_max
+#print(my_building.heat_load_max)
 
 # choose system configuration
 print("Please choose one of the following systems, or create your own (0):")
@@ -129,7 +134,7 @@ selection = int(input(''))
 system_path = existing_systems[selection-1]
 
 if selection == 0:
-    system_path = actions.configure_system(c.START_YEAR-1, me.name)
+    system_path = actions.configure_system(c.START_YEAR-1, me, my_building)
 
 my_system = system.System(system_path)
 
@@ -163,7 +168,7 @@ while year <= c.END_YEAR: # end year
             if system_input == '0': # return
                 pass
             elif system_input == '1': # change system
-                system_path = actions.configure_system(year, me.name)
+                system_path = actions.configure_system(year, me, building)
                 my_system = system.System(system_path)
                 investment_cost = my_system.calc_investment_cost()
 

@@ -28,14 +28,16 @@ def change_windows(building, type):
     print(f"Windows exchanged: u-value {building.u_value_window:.2} -> {new_u_value} W/(m^2K)")
     building.u_value_window = new_u_value
 
-def configure_system(year, user_name):
+def configure_system(year, user, building):
     '''
     Parameters
     ---------
     year: int
         current year - used to set construction year of PV system
-    user_name: str
+    user: instance of User object
         used to name the configured file
+    building: instance of Building object
+        used to give recommendation for system dimensioning
     Returns
     -------
     str
@@ -49,10 +51,10 @@ def configure_system(year, user_name):
     elif heat_input == '2':
         heat_selection = 'HeatPumpAir'
     # input nominal power of heating system
-    power_heat = float(input(f"Please input the nominal power of the {heat_selection} in kW : "))
+    power_heat = float(input(f"Please input the nominal power of the {heat_selection} in kW (maximum heating load of the building: {building.heat_load_max/1000:.2f} kW) : "))
     heat_system_path = Path('data/systems/' + heat_selection + '.yaml')
     # ToDo add recommendation based on max bldg heating load * 1.1 safety factor
-    system_name = user_name + "'s_" + heat_selection
+    system_name = user.name + "'s_" + heat_selection
     
     el_selection = "" # initialization
     el_input = input("Do you want to add a PV system? no (0), yes (1) : ")
