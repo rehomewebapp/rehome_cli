@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 
 from utilities import calc_irradiance_on_tilted_plane
+import constants as c
 
 class System:
     def __init__(self, system_path):

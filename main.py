@@ -13,6 +13,7 @@ yaml = YAML()
 
 # modules you find in this directory
 import utilities as util
+import constants as c
 import user
 import building
 import system
@@ -36,7 +37,7 @@ my_scenario = scenario.Eco2("data/eco2_paths/Scenario.csv")
 selection = input(f"\nENTER to continue: ")
 util.clear_console()
 # initalize results dataframe
-initial_year = 2021
+initial_year = c.START_YEAR - 1 # initialization in year 2021
 annual_results = pd.DataFrame(index = my_scenario.eco2_path.index)
 
 # choose user
@@ -116,7 +117,7 @@ my_building = building.Building(building_path, verbose = False)
 
 
 # choose system configuration
-my_system, system_path = actions.choose_system()
+my_system, system_path = actions.choose_system(c.START_YEAR)
 
 annual_results.to_csv('annual_results.csv')
 
@@ -124,8 +125,8 @@ annual_results.to_csv('annual_results.csv')
 event_states = {} # initalize event states, to store event information for durations longer than one year
 
 win = True
-year = initial_year+1 # start year
-while year <= 2045: # end year
+year = c.START_YEAR # initialize with start year 2022
+while year <= c.END_YEAR: # end year
     user_input = '0'
     while user_input != '':
         util.clear_console()
@@ -148,9 +149,9 @@ while year <= 2045: # end year
             if system_input == '0': # return
                 pass
             elif system_input == '1': # change system
-                my_system, system_path = actions.choose_system()
+                my_system, system_path = actions.choose_system(year)
                 investment_cost = my_system.calc_investment_cost()
-                #print(investment_cost)
+
                 me.action_economic_balance += investment_cost['Investment cost total [Euro]']
             elif system_input == '2': # edit system
                 print("Let's improve the System Performance!")
