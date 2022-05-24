@@ -252,15 +252,18 @@ class HeatPumpAir(Component):
 
         #calculate thermal power of the heat pump
         if isinstance(heat_demand, pd.Series):
-            if heat_demand.max()/1000 > self.power_nom:
-                print(f'Heating load can not be covered by the Heat Pump! Maximum heat load : {heat_demand.max()/1000:.2f} kW')
             power_th = heat_demand.clip(upper = self.power_nom * 1000)
+            if heat_demand.max()/1000 > self.power_nom:
+                uncovered_heat = heat_demand - power_th # W
+                input(f'Heating load can not be covered by the Heat Pump! Uncovered heat: {uncovered_heat.sum()/1000:.2f} kWh/a')
+            
         else:
             if heat_demand/1000 < self.power_nom: #if the heating load can be covered by the heat pump
                 power_th = heat_demand #heat delivered by the heat pump equals the heating load
             else: #if the heating load is bigger than the max heat pump power
                 power_th = self.power_nom * 1000 #heat delivered by the heat pump is max heat pump power
-                print(f'Heating load can not be covered by the Heat Pump! Heat load : {heat_demand/1000:.2f} kW')
+                uncovered_heat = heat_demand - power_th # W
+                input(f'Heating load can not be covered by the Heat Pump! Uncovered heat : {uncovered_heat/1000:.2f} kW')
 
         #calculate COP
         cop = self.c_eff_const + self.c_eff_lin * delta_temp + self.c_eff_quad * np.power(delta_temp,2)
