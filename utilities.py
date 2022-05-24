@@ -87,4 +87,10 @@ def calc_irradiance_on_tilted_plane(weather, tilt_angle, azimuth_angle):
 
 # USER INTERFACE
 # https://stackoverflow.com/questions/517970/how-to-clear-the-interpreter-console
-clear_console = lambda: subprocess.call('cls||clear', shell=True)
+def clear_console():
+    debugging_mode = 1 # off (0), on (1)
+    if debugging_mode == 0:
+        clear_console = lambda: subprocess.call('cls||clear', shell=True)
+        clear_console()
+    else:
+        pass
