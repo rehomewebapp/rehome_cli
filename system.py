@@ -121,7 +121,7 @@ class GasBoiler(Component):
         return energy_cost
 
     def calc_investment_cost(self):
-        cost = 0 # ToDo add calculation and power_nom
+        cost = self.power_nom * self.cost_value_a * math.pow(self.power_nom, self.cost_value_b)
         return cost
     
 
