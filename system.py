@@ -23,15 +23,14 @@ class System:
             #setattr(self, component, constructor(params)) # add component instance as attribute to the systems
             self.components[component] = constructor(params)
 
-    def calc_energy(self, heat_demand, el_demand, weather):
-        ''' Calculate heat and electricity balances
+    def calc_energy(self, heat_demand, weather):
+        ''' Calculate heat and electricity production
         '''
-        # heat balance
+        # heat production
         res = pd.DataFrame()
 
-        #used_gas = self.GasBoiler.calc(heat_demand)
         for component in self.components:
-            res[self.components[component].energy] = self.components[component].calc_energy(heat_demand, el_demand, weather) # [Wh]
+            res[self.components[component].energy] = self.components[component].calc_energy(heat_demand, weather) # [Wh]
 
         # electricity balance
         #pv_production = self.Photovoltaic.calc(weather)
@@ -108,7 +107,7 @@ class GasBoiler(Component):
         self.cost = "GasBoiler Gas cost [Euro]"
         self.invest = "GasBoiler Invest [Euro]"
 
-    def calc_energy(self, heat_demand, el_demand, weather):
+    def calc_energy(self, heat_demand, weather):
 
         #calculate thermal power of the gas boiler
         if isinstance(heat_demand, pd.Series):
@@ -190,7 +189,7 @@ class Photovoltaic(Component):
 
 
 
-    def calc_energy(self, heat_demand, el_demand, weather):
+    def calc_energy(self, heat_demand, weather):
         ''' calculate PV power
         Parameters
         ----------
@@ -255,7 +254,7 @@ class HeatPumpAir(Component):
         self.cost = "HeatPumpAir El. cost [Euro]"
         self.invest = "HeatPumpAir Invest [Euro]"
 
-    def calc_energy(self, heat_demand, el_demand, weather):
+    def calc_energy(self, heat_demand, weather):
         # calculate sink temperature with heating curve
         temp_sink = self.hc_const + self.hc_lin * weather['T_amb [degC]'] + self.hc_quad * np.power(weather['T_amb [degC]'],2)
         
