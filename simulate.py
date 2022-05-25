@@ -11,7 +11,7 @@ def calculate(year, user, building, system, scenario):
     annual_el_hh  = hourly_el_demand.sum()    # Wh
     
     # System
-    system_results = system.calc_energy(hourly_heat_demand, hourly_el_demand, building.weather) 
+    system_results = system.calc_energy(hourly_heat_demand, building.weather) 
 
     # Calculate CO2 emissions
     ecology_results = system.calc_emissions(year, scenario, system_results) # [tons]
