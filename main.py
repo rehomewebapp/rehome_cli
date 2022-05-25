@@ -131,6 +131,7 @@ for cnt, system_path in enumerate(existing_systems):
     system_name = system_filename.split(sep='.')[0]
     print(f'   - {system_name} ({cnt+1})')
 selection = int(input(''))
+#
 system_path = existing_systems[selection-1]
 
 if selection == 0:
@@ -168,7 +169,7 @@ while year <= c.END_YEAR: # end year
             if system_input == '0': # return
                 pass
             elif system_input == '1': # change system
-                system_path = actions.configure_system(year, me, building)
+                system_path = actions.configure_system(year, me, my_building)
                 my_system = system.System(system_path)
                 investment_cost = my_system.calc_investment_cost()
 
