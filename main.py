@@ -34,7 +34,7 @@ print("    Try to reach the climate goals without going bankrupt or violating yo
 my_scenario = scenario.Eco2("data/eco2_paths/Scenario.csv")
 #print("    - Default scenario (moderate increase of CO2 pricing) ")
 #print(my_scenario.eco2_path.head())
-selection = input(f"\nENTER to continue: ")
+selection = input(f"\n    ENTER to continue: ")
 util.clear_console()
 # initalize results dataframe
 initial_year = c.START_YEAR - 1 # initialization in year 2021
@@ -54,7 +54,7 @@ if selection == 0:
     user_name = input("Give your new character a name: ")
     new_user_path = Path(f'data/users/{user_name}.yaml')
     # create a copy of the default user
-    shutil.copy(Path('data/users/NewUser.yaml'), new_user_path)
+    shutil.copy(Path('data/users/DefaultUser.yaml'), new_user_path)
     # write user name to user config file
     with open(new_user_path, "r") as stream:
         user_file = yaml.load(stream)
@@ -119,11 +119,12 @@ my_building = building.Building(building_path, verbose = False)
 annual_building_results, hourly_heat_demand = my_building.calc(me)
 heat_load_max = hourly_heat_demand.max()
 my_building.heat_load_max = heat_load_max
-#print(my_building.heat_load_max)
+print(f"Maximum heating load of your building: {my_building.heat_load_max/1000:.2f} kW")
+input('        ENTER to continue:')
 
 # choose system configuration
 print("Please choose one of the following systems, or create your own (0):")
-existing_systems = glob.glob('data/systems/configured/*.yaml')
+existing_systems = glob.glob('data/systems/*.yaml')
 # print all available options
 for cnt, system_path in enumerate(existing_systems):
     # only print the filename, not the path
@@ -135,9 +136,9 @@ selection = int(input(''))
 system_path = existing_systems[selection-1]
 
 if selection == 0:
-    system_path = actions.configure_system(c.START_YEAR-1, me, my_building)
-
-my_system = system.System(system_path)
+    my_system = actions.generate_system(me, my_building)
+else:
+    my_system = system.System(system_path)
 
 annual_results.to_csv('annual_results.csv')
 
@@ -150,7 +151,7 @@ while year <= c.END_YEAR: # end year
     user_input = '0'
     while user_input != '':
         util.clear_console()
-        user_input = input('ENTER to Simulate next year; Renovate building (1); Improve the System (2); Change User Behaviour (3): ')
+        user_input = input('ENTER to Simulate next year; Renovate building (1); Edit System (2); Change User Behaviour (3): ')
         if user_input == '1': # renovate building
             component_input = input("Select component: none (0), facade (1), roof (2), upper ceiling (3), groundplate (4), window (5): ")
             if component_input == '0': # none
@@ -158,25 +159,26 @@ while year <= c.END_YEAR: # end year
             elif int(component_input) < 5:
                 thickness_insulation = int(input("Additional insulation thickness [cm]: "))
                 actions.insulate(my_building, component_input, thickness_insulation)
-                input("ENTER to continue")
+                input("    ENTER to continue")
             elif component_input == '5': # window
                 window_type = input("Select new window type: wood double-glazed (1), plastic insulating glass (2), alu/steel insulating glass (3): ")
                 actions.change_windows(my_building, window_type)
-                input("ENTER to continue")
+                input("    ENTER to continue")
                 
         elif user_input == '2': # change system parameters
-            system_input = input("Return (0), Change system (1), Improve current system (2): ")
-            if system_input == '0': # return
-                pass
-            elif system_input == '1': # change system
-                system_path = actions.configure_system(year, me, my_building)
-                my_system = system.System(system_path)
-                investment_cost = my_system.calc_investment_cost()
+            # aks user if he wants to add or remove a component
+            usr_input = -1
+            while usr_input not in [0,1]:
+                usr_input = int(input('Return (0), Add component (1), Remove component (2): '))
+                if usr_input == 0:
+                    break
+                if usr_input == 1:
+                    my_system = actions.add_system_component(me, my_building, my_system, year)
+                elif usr_input == 2:
+                    my_system = actions.delete_system_component(my_building, my_system)
+                else:
+                    print('Invalid input!')
 
-                me.action_economic_balance += investment_cost['Investment cost total [Euro]']
-            elif system_input == '2': # edit system
-                print("Let's improve the System Performance!")
-                my_system = actions.optimize(system_path)
         elif user_input == '3': # change user behaviour
             print("Let's change the user behaviour!")
             me = actions.adopt(user_path)
@@ -196,7 +198,7 @@ while year <= c.END_YEAR: # end year
         event_status = getattr(events, event)(year, me, my_building, my_system, event_states)
 
     if event != 'nothing':
-        input("ENTER to continue: ")
+        input("    ENTER to continue: ")
 
     # simulate
     annual_building_results, system_results, ecology_results, annual_economy_results, comfort_deviation = simulate.calculate(year, me, my_building, my_system, my_scenario)
@@ -204,8 +206,14 @@ while year <= c.END_YEAR: # end year
     annual_system_results = system_results.sum()
     annual_ecology_results = ecology_results.sum()
 
+
+
     # calculate game log
     game_log = gamelog.calculate(annual_ecology_results, annual_economy_results, comfort_deviation, annual_results.loc[year-1]) #ToDo add parameters
+
+    # update user
+    me.bank_deposit = game_log['Bank Deposit [Euro]']
+
 
     # append game_log dict to annual_results df  
     for key, value in game_log.items():
@@ -227,12 +235,12 @@ while year <= c.END_YEAR: # end year
     util.clear_console()
     print(f'Year: {year}/45')
     ''' Co2 emissions, Co2 budget; Annual costs, Bank deposite, '''
-    print(f"    CO2 emissions [t/a]  : {annual_ecology_results['CO2 emissions total [t]']:4.2f}", end=' ')
+    print(f"    CO2 emissions [t/a]  : {annual_ecology_results['CO2 emissions total [t]']:5.2f}", end=' ')
     print(f"    Bank balance [Euro/a]: {annual_economy_results['Balance [Euro/a]']:9.2f}", end=' ')
     print(f"    Comfort deviation [degC]: {comfort_deviation['Comfort deviation [degC]']:9.2f}")
  
     # print gamelog
-    print(f"    CO2 budget [t]       : {game_log['CO2 Budget [t]']:4.2f}", end=' ')
+    print(f"    CO2 budget [t]       : {game_log['CO2 Budget [t]']:5.2f}", end=' ')
     print(f"    Bank deposit [Euro]  : {game_log['Bank Deposit [Euro]']:9.2f}", end=' ')
     print(f"    Comfort status : {game_log['Comfort']}\n")
 
@@ -246,7 +254,7 @@ while year <= c.END_YEAR: # end year
             print('Detailed Building Results:')
             for key, value in annual_building_results.items():
                 print(f"    {key.split('[')[0]: <30} : {value:>15.2f} [{key.split('[')[1]: <6}") # seperate key into 'name' and 'unit', align output with <^>, edit precision with .2f
-            #user_input = input('ENTER to continue; Show building results (1); Show system results (2); Show ecologic results (3); Show economic results (4) : ')
+            #user_input = input('    ENTER to continue; Show building results (1); Show system results (2); Show ecologic results (3); Show economic results (4) : ')
         if user_input == '2':
             util.clear_console()
             print('Detailed System Results:')
@@ -263,7 +271,7 @@ while year <= c.END_YEAR: # end year
             for key, value in annual_economy_results.items():
                 print(f"    {key.split('[')[0]: <30} : {value:>15.2f} [{key.split('[')[1]: <6}")
         print("\nBuilding results (1); System results (2); Ecologic results (3); Economic results (4) : ")  
-        user_input = input('ENTER to continue: ')
+        user_input = input('    ENTER to continue: ')
 
     # start next year
     year = year + 1

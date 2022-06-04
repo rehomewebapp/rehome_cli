@@ -1,4 +1,5 @@
 from datetime import datetime
+from operator import inv
 import yaml
 import pandas as pd
 import numpy as np
@@ -30,10 +31,14 @@ class User:
         df['el_hh [W]'] = user_profile_norm['el_hh_norm'] * self.annual_el_demand * 1000 # [W]
         return df
 
-
-
     def calc_economy(self):
         annual_sallary = 13 * self.monthly_sallary # [Euro] including christmas bonus
         annual_costs = 12 * (self.monthly_living_cost + self.monthly_entertainment + self.monthly_loan_payoff) # [Euro]
 
         return annual_sallary, annual_costs
+
+    def check_solvency(self, investment_cost):
+        if self.bank_deposit < investment_cost:
+            return False
+        else:
+            return True

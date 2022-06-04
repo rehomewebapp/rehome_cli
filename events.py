@@ -33,7 +33,7 @@ def sarscov(year, user, building, system, event_states):
         if year == event_states['sarscov']:
             building.ventilation_rate = building.ventilation_rate - delta_ventilation
             print(f"Yeey, the pandemic is over. Resetting ventilation rate back to {building.ventilation_rate:.2} 1/h.")
-            input('ENTER to continue.')
+            input('    ENTER to continue.')
             event_states.pop('sarscov', None) # remove event from event_states dictionary
 
         return
@@ -53,7 +53,7 @@ def saharaSand(year, user, building, system, event_states):
         if year == event_states['saharaSand']:
             system.components['Photovoltaic'].efficiency_param += delta_efficiency
             print(f"Your PV modules are clean again. Resetting efficiency back to {system.components['Photovoltaic'].efficiency_param}.")
-            input('ENTER to continue.')
+            input('    ENTER to continue.')
             event_states.pop('saharaSand', None) # remove event from event_states dictionary
         return
 
@@ -69,12 +69,12 @@ def unemployed(year, user, building, system, event_states):
     if 'unemployed' in event_states:
         if year == event_states['unemployed']:
             user.monthly_sallary = user.monthly_sallary * (1 + benefit_rate)
-            print(f"Congratulations! You found a new job. Your monthly sallary is {user.monthly_sallary} euro.")
-            input('ENTER to continue.')
+            print(f"Congratulations! You found a new job. Your monthly sallary is {user.monthly_sallary:.2f} euro.")
+            input('    ENTER to continue.')
             event_states.pop('unemployed', None) # remove event from event_states dictionary
         return
 
-    print(f"Unfortunately you've lost your job. You receive unemployment benefits in the amount of {benefit_rate * user.monthly_sallary} euro/month.")
+    print(f"Unfortunately you've lost your job. You receive unemployment benefits in the amount of {(benefit_rate * user.monthly_sallary):.2f} euro/month.")
     user.monthly_sallary = user.monthly_sallary * benefit_rate
     event_states['unemployed'] = year + random.randint(1,2)
     
@@ -109,7 +109,7 @@ def gasBoilerAging(year, user, building, system, event_states):
             system.components['GasBoiler'].efficiency += delta_efficiency
             user.event_economic_balance -=  cost # [Euro]
             print(f"A mechanic repairs your gas boiler for {cost} euro. Resetting efficiency back to {system.components['GasBoiler'].efficiency}.")
-            input('ENTER to continue.')
+            input('    ENTER to continue.')
             event_states.pop('gasBoilerAging', None) # remove event from event_states dictionary
         return
 
@@ -136,7 +136,7 @@ def coldYear(year, user, building, system, event_states):
             user.comfort_temperature = user.comfort_temperature - temp_amb_drop
             user.set_point_temperature = user.set_point_temperature - temp_amb_drop
             print(f"Ambient temperature back at normal level.")
-            input('ENTER to continue.')
+            input('    ENTER to continue.')
             event_states.pop('coldYear', None) # remove event from event_states dictionary
         return
 
@@ -157,7 +157,7 @@ def homeOffice(year, user, building, system, event_states):
             user.set_point_temperature = user.set_point_temperature - delta_temp
             user.annual_el_demand = user.annual_el_demand - delta_el
             print(f"Back to office. Annual electricity demand and set point temperature back to {user.annual_el_demand} kWh and {user.comfort_temperature} degC.")
-            input('ENTER to continue.')
+            input('    ENTER to continue.')
             event_states.pop('homeOffice', None) # remove event from event_states dictionary
         return
     

@@ -1,4 +1,4 @@
-name: bldg                # [string]
+name: DefaultBuilding          # [string]
 area_floor: 50           # [m^2] heated living area
 stories: 2               # Number of full stories (without basement / attic)
 neighbours: detached            # detached, semi-detached, terraced

@@ -1,0 +1,10 @@
+GasBoiler:
+  name: GasBoiler
+  type: GasBoiler
+  cost_value_a: 2000
+  cost_value_b: -0.6
+  om_cost: 3  # [%/a] operation and maintainance cost relative to the investment cost
+  service_life: 20  # [a]
+  power_nom: 12.0 # [kW]
+  efficiency: 0.95  # [kWhUse/kWhFuel] 0.95 for condensing, 0.9 for non condensing
+

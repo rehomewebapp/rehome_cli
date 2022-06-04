@@ -8,20 +8,32 @@ import constants as c
 
 class System:
     def __init__(self, system_path):
-        # read system parameter file
-        with open(system_path, "r") as stream:
-            try:
-                component_file = yaml.safe_load(stream)
-            except yaml.YAMLError as exc:
-                print(exc)
-
         self.components = {}
-        # Add component instances as attributes
-        for component, params in component_file.items():
-            #print(component)
-            constructor =  globals()[component] # create reference to component class
-            #setattr(self, component, constructor(params)) # add component instance as attribute to the systems
-            self.components[component] = constructor(params)
+        try:
+            # read system parameter file
+            with open(system_path, "r") as stream:
+                try:
+                    component_file = yaml.safe_load(stream)
+                except yaml.YAMLError as exc:
+                    print(exc)
+            # Add component instances as attributes
+        
+            for component, params in component_file.items():
+                #print(component)
+                constructor =  globals()[params['type']] # create reference to component class
+                #setattr(self, component, constructor(params)) # add component instance as attribute to the systems
+                self.components[component] = constructor(params)
+        except:
+            pass
+
+
+    def write_yaml(self, path):
+        dict = {}
+        for component_name, component_instance in self.components.items():
+            dict[component_name] = component_instance.__dict__
+        
+        with open(path, 'w') as f:
+            yaml.dump(dict, f)
 
     def calc_energy(self, heat_demand, weather):
         ''' Calculate heat and electricity production
@@ -59,9 +71,14 @@ class System:
         spec_cost_el_hh = scenario.eco2_path['cost_el_hh [ct/kWh]'].at[year]
         spec_cost_el_hp = scenario.eco2_path['cost_el_hp [ct/kWh]'].at[year]
         if 'Photovoltaic' in self.components:
-            pv_feedin_tariff = self.components['Photovoltaic'].feedin_tariffs.at[year] # [ct/kWh]
-            if pv_feedin_tariff == 0:
-                print(f"The feed-in tariff payment period of your PV system is expired: {self.components['Photovoltaic'].feedin_tariffs.at[year-1]:.2f} ct/kWh -> {self.components['Photovoltaic'].feedin_tariffs.at[year]:.2f} ct/kWh\n")
+            if self.components['Photovoltaic'].feedin_tariff_start + 20 < year: # tariff expired
+                self.components['Photovoltaic'].feedin_tariff_start = year
+                old_tariff = self.components['Photovoltaic'].feedin_tariff
+                pv_feedin_tariff = self.components['Photovoltaic'].calc_feedin_tariff() 
+                print(f"The feed-in tariff payment period of your PV system is expired: {old_tariff:.2f} ct/kWh -> {pv_feedin_tariff:.2f} ct/kWh\n")
+                input("    ENTER to continue")
+            else:
+                pv_feedin_tariff = self.components['Photovoltaic'].feedin_tariff
         else:
             pv_feedin_tariff = 0
         
@@ -75,21 +92,6 @@ class System:
         res['Energy cost total [Euro]'] = res.sum(axis=1) # total energy costs [Euro]
 
         return res
-
-
-    def calc_investment_cost(self):
-        invest = {}
-        
-        for component in self.components:
-            invest[self.components[component].invest] = self.components[component].calc_investment_cost() # [Euro]
-
-        sum = 0
-        for value in invest.values():
-            sum += value
-        invest['Investment cost total [Euro]'] = sum # total investment costs [Euro]
-
-        return invest
-
 
 
 class Component:
@@ -107,8 +109,15 @@ class GasBoiler(Component):
         self.cost = "GasBoiler Gas cost [Euro]"
         self.invest = "GasBoiler Invest [Euro]"
 
-    def calc_energy(self, heat_demand, weather):
+    def configure(self, year):
+        print("Please specify the parameters of your GasBoiler:")
+        # for system generation
+        if year < c.START_YEAR:
+            self.construction_year = int(input('Construction year: '))
+        self.power_nom = float(input("Nominal power in kW : "))
+        self.efficiency = float(input("Efficiency (0.95 for condensing, 0.9 for non condensing): "))
 
+    def calc_energy(self, heat_demand, weather):
         #calculate thermal power of the gas boiler
         if isinstance(heat_demand, pd.Series):
             power_th = heat_demand.clip(upper = self.power_nom * 1000)
@@ -148,9 +157,24 @@ class Photovoltaic(Component):
         self.emission = "PV CO2 emissions [t]"
         self.cost = "PV feed-in revenue [Euro]"
         self.invest = "PV Invest [Euro]"
-        if self.construction_year >= c.START_YEAR:
+
+    def configure(self, year):
+        print("Please specify the parameters of your PV system:")
+
+        # for system generation
+        if year < c.START_YEAR:
+            self.construction_year = int(input('Construction year: '))
+            self.feedin_tariff = float(input('Feed-in tariff in ct/kWh: '))
+        else:
+            # system added in main loop
+            self.construction_year = year
             self.feedin_tariff = self.calc_feedin_tariff()
-        self.feedin_tariffs = self.set_feedin_tariffs()
+
+        self.power_nom = float(input("Nominal power in kW : "))
+        self.tilt_angle = float(input("Tilt angle (0 : horizontal, 90 : vertical) in deg : "))
+        orientation_input = input("Orientation (S,SW,W,NW,N,NE,E,SE) : ")
+        azimuth_angles = {'S':0, 'SW':45, 'W':90, 'NW':135, 'N':180, 'NE':-135, 'E':-90, 'SE':-45 }
+        self.azimuth_angle = azimuth_angles[orientation_input]
 
     def calc_feedin_tariff(self):
         ''' Calculate the constant feed-in tariff for the PV System based on its year of construction.
@@ -167,25 +191,10 @@ class Photovoltaic(Component):
         # https://www.solaranlagen-portal.com/photovoltaik-grossanlage/wirtschaftlichkeit/degression-einspeiseverguetung
         degression_rate = 0.4 # [%] monthly
         
-        n_months = (self.construction_year - ref_year) * 12 # number of months passed since reference year Jan 2022
+        n_months = (self.feedin_tariff_start - ref_year) * 12 # number of months passed since reference year Jan 2022
         feedin_tariff = feedin_tariff_ref * math.pow(1 - degression_rate/100, n_months) # [ct/kWh]
         
         return feedin_tariff
-
-    def set_feedin_tariffs(self):
-        ''' Set feedin-tariff for a duration of 20 years.
-        Returns
-        -------
-        pd.Series
-            feed-in tariff for PV system in the game period 2022-2045
-        '''
-        duration = 20 # [a] validity of feedin tariff
-        index = np.linspace(c.START_YEAR, c.END_YEAR, c.END_YEAR-c.START_YEAR+1)
-        feedin_tariffs = pd.Series(0, index) # initialize series with zeros
-        start_feedin = max(self.construction_year, c.START_YEAR)
-        feedin_tariffs.loc[start_feedin : self.construction_year + duration] = self.feedin_tariff
-        #print(feedin_tariffs)
-        return feedin_tariffs
 
 
 
@@ -253,6 +262,13 @@ class HeatPumpAir(Component):
         self.emission = "HeatPumpAir CO2 emissions [t]"
         self.cost = "HeatPumpAir El. cost [Euro]"
         self.invest = "HeatPumpAir Invest [Euro]"
+
+    def configure(self, year):
+        # for system generation
+        if year < c.START_YEAR:
+            self.construction_year = int(input('Construction year: '))
+        print("Please specify the parameters of your HeatPumpAir:")
+        self.power_nom = float(input("Nominal power in kW : "))
 
     def calc_energy(self, heat_demand, weather):
         # calculate sink temperature with heating curve

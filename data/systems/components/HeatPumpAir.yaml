@@ -1,4 +1,6 @@
 HeatPumpAir:
+  name: HeatPumpAir
+  type: HeatPumpAir
   cost_value_a : 3800
   cost_value_b : -0.4
   om_cost : 2         # [%/a] operation and maintainance cost relative to the investment cost

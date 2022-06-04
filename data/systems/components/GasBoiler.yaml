@@ -1,4 +1,6 @@
 GasBoiler:
+  name: GasBoiler
+  type: GasBoiler
   cost_value_a: 2000
   cost_value_b: -0.6
   om_cost: 3  # [%/a] operation and maintainance cost relative to the investment cost

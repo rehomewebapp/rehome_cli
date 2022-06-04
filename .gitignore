@@ -2,7 +2,9 @@ __pycache__/*
 *.json
 *.yaml
 *.pyc
-!NewBuilding.yaml
-!NewUser.yaml
-!data/systems/*.yaml
+!DefaultBuilding.yaml
+!Default_GasBoiler12kW_PV10kWp.yaml
+!Default_GasBoiler12kW.yaml
+!DefaultUser.yaml
+!data/systems/components/*.yaml
 annual_results.csv

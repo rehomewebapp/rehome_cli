@@ -1,16 +1,100 @@
 import subprocess
 import glob       # used to find available parameter files
 import pandas as pd
-import shutil     # used to create copies of the default parameter files
-from pathlib import Path
-from ruamel.yaml import YAML # this version of pyyaml support dumping without loosing the comments in the .yaml file
-yaml = YAML()
+import yaml
 
 import user
 import utilities as util
 import constants as c
-import building
-import system
+from system import *
+
+def add_system_component(user, building, system, year):
+    ''' This function adds a component to the given system'''
+    # which component to add?
+    print("Please choose the component you want to add: ")
+    available_components = glob.glob('data/systems/components/*.yaml')
+    # print all available options
+    for cnt, component_path in enumerate(available_components):
+        # only print the filename, not the path
+        component_filename = util.path_leaf(component_path)
+        component_name = component_filename.split(sep='.')[0]
+        print(f'   - {component_name} ({cnt+1})')
+    selection = int(input(''))
+
+    component_path = available_components[selection - 1]
+
+    # create component
+    with open(component_path, "r") as stream:
+        component_file = yaml.safe_load(stream)
+
+    params = list(component_file.items())[0][1] # extract single value from dict
+    constructor =  globals()[params['type']] # create reference to component class
+    my_component = constructor(params)
+
+    # configure component (not yet implemented)
+    my_component.configure(year)
+
+    # dont calc invest for system generation
+    if year >= c.START_YEAR:
+        # calc cost of new component
+        investment_cost = my_component.calc_investment_cost()
+
+        # check if the user has enough money
+        if user.check_solvency(investment_cost):
+            # ask user if he wants to purchase
+            user_input = input(f"ENTER to purchase {my_component.name} system for {investment_cost:.2f} Euro, (0) to reject: ")
+            if user_input == '0':
+                return system
+        else:
+            print(f"You don't have enough money! \n    {my_component.name} : {investment_cost:.2f} Euro < {user.bank_deposit:.2f} Euro : Bank deposit")
+            return system
+
+    # Give name to new component
+    usr_input = input('Give your new component a name: ')
+    my_component.name = usr_input
+
+    # add component to system obj
+    system.components[my_component.name] = my_component
+
+    # dont calc invest for system generation
+    if year >= c.START_YEAR:
+        # add investment cost to economic balance
+        user.action_economic_balance += investment_cost
+
+    # write system configuration to yaml
+    system_path = f'data/systems/{building.name}'
+    for component_name in system.components.keys():
+        system_path += ('_' + component_name)
+    system.write_yaml(system_path + '.yaml')
+    
+    return system
+
+def delete_system_component(building, system):
+    # list available components
+    print("Please choose the component you want to delete: ")
+    print('   - None (0)')
+    existing_components = []
+    for cnt, component in enumerate(system.components.items()):
+        # print all available options
+        print(f'   - {component[0]} ({cnt+1})')
+        existing_components.append(component[0])
+
+    # select component to delete
+    selection = int(input(''))
+    if selection == 0:
+        return system
+
+    # remove component from system object
+    system.components.pop(existing_components[selection-1], None)
+
+    print(f'Removed {existing_components[selection-1]} from system.')
+
+    # write system configuration to yaml
+    system_path = f'data/systems/{building.name}'
+    for component_name in system.components.keys():
+        system_path += ('_' + component_name)
+    system.write_yaml(system_path + '.yaml')
+    return system
 
 def insulate(building, component, thickness):
     components = {'1' : 'facade', '2' : 'roof', '3' : 'upper_ceiling', '4' : 'groundplate'}
@@ -28,89 +112,30 @@ def change_windows(building, type):
     print(f"Windows exchanged: u-value {building.u_value_window:.2} -> {new_u_value} W/(m^2K)")
     building.u_value_window = new_u_value
 
-def configure_system(year, user, building):
+def generate_system(user, building):
     '''
     Parameters
     ---------
-    year: int
-        current year - used to set construction year of PV system
     user: instance of User object
-        used to name the configured file
+        not used but required for add_system_component fct
     building: instance of Building object
         used to give recommendation for system dimensioning
     Returns
     -------
-    str
-        new file path for the configured system yaml-file
+    instance of System object
+        new System
     '''
     util.clear_console()
-    # choose heat generation system
-    heat_input = input("Please choose your heat generation system: GasBoiler (1), HeatPumpAir (2) : ")
-    if heat_input == '1':
-        heat_selection = 'GasBoiler'
-    elif heat_input == '2':
-        heat_selection = 'HeatPumpAir'
-    # input nominal power of heating system
-    power_heat = float(input(f"Please input the nominal power of the {heat_selection} in kW (maximum heating load of the building: {building.heat_load_max/1000:.2f} kW) : "))
-    heat_system_path = Path('data/systems/' + heat_selection + '.yaml')
-    # ToDo add recommendation based on max bldg heating load * 1.1 safety factor
-    system_name = user.name + "'s_" + heat_selection
-    
-    el_selection = "" # initialization
-    el_input = input("Do you want to add a PV system? no (0), yes (1) : ")
-    if el_input == '1':
-        # ToDo generalize adding PV for all heat generation systems, not only for GasBoiler
-        if heat_input == '2':
-            print("The combination of HeatPump and PV is not yet implemented. =( ")
-        else:
-            el_selection = 'PV'
-            print("Please specify the parameters of your PV system:")
-            if year == c.START_YEAR-1: # during system initialization
-                construction_year = int(input("Year of construction : "))
-                feedin_tariff = float(input("Feed-in tariff in ct/kWh : "))
-            else: # during game
-                construction_year = year
-            power_pv = float(input("Nominal power in kW : "))
-            tilt_angle = float(input("Tilt angle (0 : horizontal, 90 : vertical) in deg : "))
-            orientation_input = input("Orientation (S,SW,W,NW,N,NE,E,SE) : ")
-            azimuth_angles = {'S':0, 'SW':45, 'W':90, 'NW':135, 'N':180, 'NE':-135, 'E':-90, 'SE':-45 }
-            azimuth_angle = azimuth_angles[orientation_input]
-            el_system_path = Path('data/systems/' + el_selection + '.yaml')
-            system_name += '_' + el_selection
+    inital_year = c.START_YEAR - 1
 
-    new_system_path = Path('data/systems/configured/' + system_name + '.yaml')
-
-    # create a copy of the heat system
-    shutil.copy(heat_system_path, new_system_path)
-    with open(new_system_path, "r") as stream:
-        system_file = yaml.load(stream)
-    # set name of system
-    #system_file['name'] = system_name
-    # set nominal power of heating system
-    system_file[heat_selection]['power_nom'] = power_heat
-
-    # if pv system is selected:
-    if el_selection == 'PV':
-        with open(el_system_path, "r") as stream:
-            el_file = yaml.load(stream)
-        system_file['Photovoltaic'] = el_file['Photovoltaic']
-        system_file['Photovoltaic']['power_nom'] = power_pv
-        system_file['Photovoltaic']['tilt_angle'] = tilt_angle
-        system_file['Photovoltaic']['azimuth_angle'] = azimuth_angle
-        system_file['Photovoltaic']['construction_year'] = construction_year
-        if year == c.START_YEAR-1: # during system initialization
-            system_file['Photovoltaic']['feedin_tariff'] = feedin_tariff
-    with open(new_system_path, 'w') as f:
-        yaml.dump(system_file, f)
-    
-    return new_system_path
-
-def optimize(system_path):
-    # edit parameters
-    subprocess.call(['nano', system_path])
-    new_system = system.System(system_path)
-    return new_system
-
+    # initalize empty system
+    system = System('')
+    # add component
+    usr_input = ''
+    while usr_input != '0':
+        system = add_system_component(user, building, system, inital_year)
+        usr_input = input('ENTER to add another component, (0) to finish: ')
+    return system
 
 def adopt(user_path):
     # change user behaviour
@@ -118,8 +143,6 @@ def adopt(user_path):
     print('Behaviour adopted!')
     new_user = user.User(user_path)
     return new_user
-
-
 
 if __name__ == "__main__":
     pass
