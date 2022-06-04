@@ -19,7 +19,7 @@ import building
 import system
 import actions
 import events
-import simulate
+import simulator
 import scenario
 import gamelog
 
@@ -120,7 +120,7 @@ annual_building_results, hourly_heat_demand = my_building.calc(me)
 heat_load_max = hourly_heat_demand.max()
 my_building.heat_load_max = heat_load_max
 print(f"Maximum heating load of your building: {my_building.heat_load_max/1000:.2f} kW")
-input('        ENTER to continue:')
+input('    ENTER to continue:')
 
 # choose system configuration
 print("Please choose one of the following systems, or create your own (0):")
@@ -141,6 +141,9 @@ else:
     my_system = system.System(system_path)
 
 annual_results.to_csv('annual_results.csv')
+
+# initalize the simulator
+my_simulator = simulator.Simulator(me, my_building, my_system, my_scenario)
 
 # start REhoming...
 event_states = {} # initalize event states, to store event information for durations longer than one year
@@ -201,11 +204,12 @@ while year <= c.END_YEAR: # end year
         input("    ENTER to continue: ")
 
     # simulate
-    annual_building_results, system_results, ecology_results, annual_economy_results, comfort_deviation = simulate.calculate(year, me, my_building, my_system, my_scenario)
-
-    annual_system_results = system_results.sum()
-    annual_ecology_results = ecology_results.sum()
-
+    results = my_simulator.simulate_year(year)
+    annual_building_results = results['building']
+    annual_system_results = results['system'].sum()
+    annual_ecology_results = results['ecology'].sum()
+    annual_economy_results = results['economy'].sum()
+    comfort_deviation = results['comfort'] # !ToDo use actual room temperature for calculation of comfort deviation -> return hourly values
 
 
     # calculate game log
