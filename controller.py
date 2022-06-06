@@ -7,11 +7,15 @@ def select_controller(system):
             available_components.append('GasBoiler')
         if params.type == 'Photovoltaic':
             available_components.append('Photovoltaic')
+        if params.type == 'HeatPumpAir':
+            available_components.append('HeatPumpAir')
 
         if 'Photovoltaic' in available_components:
             controller = Ctrl_PV()
         if 'GasBoiler' in available_components:
             controller = Ctrl_GasBoiler()
+        if 'HeatPumpAir' in available_components:
+            controller = Ctrl_HeatPumpAir()
         if 'Photovoltaic' in available_components and 'GasBoiler' in available_components:
             controller = Ctrl_GasBoiler_PV()
             break
@@ -131,6 +135,37 @@ class Ctrl_GasBoiler_PV():
             P_pv_feedin = P_el_pv_prod_excess
             P_el_grid_hh = 0
         res["Electricity PV feedin [Wh]"] = P_pv_feedin
+        res["Electricity grid household [Wh]"] = P_el_grid_hh
+
+        return res
+
+class Ctrl_HeatPumpAir():
+    def control(self, Qdot_heat_load, P_el_hh, disturbances, system):
+        # HEAT BALANCE
+        # find heatpump, note only the last component with type heatpumpair will be used!
+        for component, params in system.components.items():
+            if params.type == 'HeatPumpAir':
+                heatpump = system.components[component]
+
+        # find nominal power of gas boiler
+        power_nom = heatpump.power_nom * 1000 # [W]
+
+        # check if heat load can be covered
+        if power_nom < Qdot_heat_load:
+            Qdot_heat_actual = power_nom
+            Qdot_heat_uncovered = Qdot_heat_load - Qdot_heat_actual
+        else:
+            Qdot_heat_actual = Qdot_heat_load
+            Qdot_heat_uncovered = 0
+
+        res = {heatpump.heat : Qdot_heat_actual, "Uncovered heat [Wh]" : Qdot_heat_uncovered}
+
+        # ELECTRICITY BALANCE
+        # Heatpump
+        used_el = heatpump.calc_energy(Qdot_heat_load, disturbances)
+        res[heatpump.energy] = used_el
+        # Household
+        P_el_grid_hh = P_el_hh
         res["Electricity grid household [Wh]"] = P_el_grid_hh
 
         return res

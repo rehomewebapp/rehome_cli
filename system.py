@@ -93,7 +93,7 @@ class System:
         P_el_grid_hh = system_results["Electricity grid household [Wh]"]
 
         energy_cost_grid_el_hh = P_el_grid_hh/1000 * spec_cost_el_hh/100 # [Wh]/1000 * [ct/kWh]/100 = [Euro]
-        res["Household El. cost [Wh]"] = energy_cost_grid_el_hh
+        res["Household El. cost [Euro]"] = energy_cost_grid_el_hh
         sum += energy_cost_grid_el_hh
 
         res['Energy cost total [Euro]'] = sum # total energy costs [Euro]
@@ -251,6 +251,7 @@ class Photovoltaic(Component):
 class HeatPumpAir(Component):
     def __init__(self, params):
         Component.__init__(self, params)
+        self.heat = "HeatPumpAir Heat Production [Wh]"
         self.energy = "HeatPumpAir El. Consumption [Wh]"
         self.emission = "HeatPumpAir CO2 emissions [t]"
         self.cost = "HeatPumpAir El. cost [Euro]"
@@ -275,6 +276,7 @@ class HeatPumpAir(Component):
             if delta_temp < 0: #if source temperature is higher than sink temperature
                 delta_temp = 0 #set temperature difference to zero
 
+        ''' this should done by the controller
         #calculate thermal power of the heat pump
         if isinstance(heat_demand, pd.Series):
             power_th = heat_demand.clip(upper = self.power_nom * 1000)
@@ -289,12 +291,12 @@ class HeatPumpAir(Component):
                 power_th = self.power_nom * 1000 #heat delivered by the heat pump is max heat pump power
                 uncovered_heat = heat_demand - power_th # W
                 input(f'Heating load can not be covered by the Heat Pump! Uncovered heat : {uncovered_heat/1000:.2f} kW')
-
+        '''
         #calculate COP
         cop = self.c_eff_const + self.c_eff_lin * delta_temp + self.c_eff_quad * np.power(delta_temp,2)
         
         #calculate electrical power of the heat pump
-        power_el = power_th / cop
+        power_el = heat_demand / cop
         return power_el
 
     def calc_emissions(self, energy, spec_co2):
