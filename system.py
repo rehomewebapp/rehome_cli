@@ -35,23 +35,6 @@ class System:
         with open(path, 'w') as f:
             yaml.dump(dict, f)
 
-    def calc_energy(self, heat_demand, weather):
-        ''' Calculate heat and electricity production
-        '''
-        # heat production
-        res = pd.DataFrame()
-
-        for component in self.components:
-            res[self.components[component].energy] = self.components[component].calc_energy(heat_demand, weather) # [Wh]
-
-        # electricity balance
-        #pv_production = self.Photovoltaic.calc(weather)
-        #balance = el_demand - pv_production
-        #el_feedin = balance.where(balance < 0, 0)
-        #el_supply = balance.where(balance > 0, 0)
-
-        return res
-        #return {'Gas consumption [kwh/a]': used_gas.sum()/1000, 'Electricity PV feed-in [kWh/a]': el_feedin.sum()/1000, 'Electricity grid supply [kWh/a]': el_supply.sum()/1000}, used_gas, el_feedin, el_supply
     
     def calc_emissions(self, year, scenario, system_results):
         spec_co2_gas = scenario.eco2_path['spec_CO2_gas [g/kWh]'].at[year]
@@ -78,17 +61,24 @@ class System:
         spec_cost_gas = scenario.eco2_path['cost_gas [ct/kWh]'].at[year]
         spec_cost_el_hh = scenario.eco2_path['cost_el_hh [ct/kWh]'].at[year]
         spec_cost_el_hp = scenario.eco2_path['cost_el_hp [ct/kWh]'].at[year]
-        if 'Photovoltaic' in self.components:
-            if self.components['Photovoltaic'].feedin_tariff_start + 20 < year: # tariff expired
-                self.components['Photovoltaic'].feedin_tariff_start = year
-                old_tariff = self.components['Photovoltaic'].feedin_tariff
-                pv_feedin_tariff = self.components['Photovoltaic'].calc_feedin_tariff() 
-                print(f"The feed-in tariff payment period of your PV system is expired: {old_tariff:.2f} ct/kWh -> {pv_feedin_tariff:.2f} ct/kWh\n")
-                input("    ENTER to continue")
+
+        # find PV system, note only the last component with type Photovoltaic will be used!
+        for component, params in self.components.items():
+            if params.type == 'Photovoltaic':
+                pv_system = self.components[component]
+                if pv_system.feedin_tariff_start + 20 < year: # tariff expired
+                    pv_system.feedin_tariff_start = year
+                    old_tariff = pv_system.feedin_tariff
+                    pv_feedin_tariff = pv_system.calc_feedin_tariff() 
+                    print(f"The feed-in tariff payment period of your PV system is expired: {old_tariff:.2f} ct/kWh -> {pv_feedin_tariff:.2f} ct/kWh\n")
+                    input("    ENTER to continue")
+                else:
+                    pv_feedin_tariff = pv_system.feedin_tariff
             else:
-                pv_feedin_tariff = self.components['Photovoltaic'].feedin_tariff
-        else:
-            pv_feedin_tariff = 0
+                pv_feedin_tariff = 0
+
+
+        
         
         spec_cost_energy = {'gas' : spec_cost_gas, 'el hh' : spec_cost_el_hh, 'el hp' : spec_cost_el_hp, 'pv feed-in' : pv_feedin_tariff}
 
@@ -97,6 +87,7 @@ class System:
         for component in self.components:
             res[self.components[component].cost] = self.components[component].calc_energy_cost(system_results[self.components[component].energy], spec_cost_energy) # [Euro]
             sum += res[self.components[component].cost]
+            #print(res[self.components[component].cost])
 
         # Grid household el
         P_el_grid_hh = system_results["Electricity grid household [Wh]"]
@@ -135,24 +126,7 @@ class GasBoiler(Component):
         self.efficiency = float(input("Efficiency (0.95 for condensing, 0.9 for non condensing): "))
 
     def calc_energy(self, Qdot_heat_actual):
-        '''
-        #calculate thermal power of the gas boiler
-        if isinstance(heat_demand, pd.Series):
-            power_th = heat_demand.clip(upper = self.power_nom * 1000)
-            if heat_demand.max()/1000 > self.power_nom:
-                uncovered_heat = heat_demand - power_th # W
-                input(f'Heating load can not be covered by the Gas Boiler! Uncovered heat: {uncovered_heat.sum()/1000:.2f} kWh/a')
-            
-        else:
-            if heat_demand/1000 < self.power_nom: #if the heating load can be covered
-                power_th = heat_demand #heat delivered by the gas boiler equals the heating load
-            else: #if the heating load is bigger than the max gas boiler power
-                power_th = self.power_nom * 1000 #heat delivered by the gas boiler is max boiler power
-                uncovered_heat = heat_demand - power_th # W
-                input(f'Heating load can not be covered by the Gas Boiler! Uncovered heat: {uncovered_heat/1000:.2f} kW')
-        '''
         used_gas = Qdot_heat_actual / self.efficiency # [W] assuming hourly time steps
-
         return used_gas
 
     def calc_emissions(self, energy, spec_co2):
@@ -216,7 +190,7 @@ class Photovoltaic(Component):
 
 
 
-    def calc_energy(self, heat_demand, weather):
+    def calc_energy(self, weather):
         ''' calculate PV power
         Parameters
         ----------
@@ -249,7 +223,8 @@ class Photovoltaic(Component):
         temp_stc = 25   #standard test condition temperature [°C]
         
         if self.power_nom != 0:
-            eta = a0 + a1*irradiance_tilted + a2* irradiance_tilted.pow(2) + a3* irradiance_tilted.pow(3) # efficiency curve
+            #eta = a0 + a1*irradiance_tilted + a2* irradiance_tilted.pow(2) + a3* irradiance_tilted.pow(3) # efficiency curve
+            eta = a0 + a1*irradiance_tilted + a2* np.power(irradiance_tilted, 2) + a3* np.power(irradiance_tilted, 3) # efficiency curve
             area_total = area_spec * self.power_nom # total area [m²]
             eta_nom = self.power_nom / (irrad_norm * area_total) # nominal efficiency [-]
             eta = eta * self.efficiency_param * eta_nom # efficiency

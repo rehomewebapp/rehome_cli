@@ -8,12 +8,12 @@ class Simulator():
         self.building = building
         self.system = system
         self.scenario = scenario
-        self.controller = controller.Ctrl_GasBoiler()
         
+    
 
-    def one_step(self, year, Qdot_heat_load, P_el_hh):
+    def one_step(self, year, Qdot_heat_load, P_el_hh, one_step_disturbances):
         # calculate energy
-        system_results = self.controller.control(Qdot_heat_load, P_el_hh, self.system)
+        system_results = self.ctrl.control(Qdot_heat_load, P_el_hh, one_step_disturbances, self.system)
         # calculate eco2
         ecologic_results = self.system.calc_emissions(year, self.scenario, system_results)
         economic_results = self.system.calc_energy_cost(year, self.scenario, system_results)
@@ -22,10 +22,15 @@ class Simulator():
         return results
 
     def simulate_year(self, year):
+        # select controller
+        self.ctrl = controller.select_controller(self.system)
+
         # Building heat demand
         hourly_heat_demand = self.building.calc(self.user)[1]
         # User el profile
         hourly_el_demand = self.user.profile['el_hh [W]']
+        # Disturbances
+        disturbances = self.building.weather
         
         hours = hourly_heat_demand.index
 
@@ -36,7 +41,8 @@ class Simulator():
         for hour in hours:
             Qdot_heat_load = hourly_heat_demand.loc[hour]
             P_el_hh = hourly_el_demand.loc[hour]
-            one_step_results = self.one_step(year, Qdot_heat_load, P_el_hh)
+            one_step_disturbances = disturbances.loc[hour]
+            one_step_results = self.one_step(year, Qdot_heat_load, P_el_hh, one_step_disturbances)
             for category, values in one_step_results.items(): # system, ecology, economy
                 for key, value in values.items():
                     results[category].at[hour, key] = value
