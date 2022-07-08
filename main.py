@@ -97,7 +97,7 @@ if selection == 0:
     building_name = input("Give your new building a name: ")
     new_building_path = Path(f'data/buildings/{building_name}.yaml')
     # create a copy of the default building
-    shutil.copy(Path('data/buildings/NewBuilding.yaml'), new_building_path)
+    shutil.copy(Path('data/buildings/DefaultBuilding.yaml'), new_building_path)
     # write building name to user config file
     with open(new_building_path, "r") as stream:
         building_file = yaml.load(stream)
